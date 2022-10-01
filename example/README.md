@@ -1,6 +1,6 @@
 # example
 
-UserTagger example project.
+UserTagger example app.
 
 ## Screenshots 📷
 
