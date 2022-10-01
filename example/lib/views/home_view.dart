@@ -16,13 +16,12 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   late final homeViewModel = HomeViewModel();
-  late final _controller = TextEditingController();
+  late final _controller = UserTaggerController();
   late final _focusNode = FocusNode();
-  late final _tagController = UserTagController();
 
   void _focusListener() {
     if (!_focusNode.hasFocus) {
-      _tagController.dismissOverlay();
+      _controller.dismissOverlay();
     }
   }
 
@@ -45,7 +44,7 @@ class _HomeViewState extends State<HomeView> {
     var insets = MediaQuery.of(context).viewInsets;
     return GestureDetector(
       onTap: () {
-        _tagController.dismissOverlay();
+        _controller.dismissOverlay();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -53,12 +52,12 @@ class _HomeViewState extends State<HomeView> {
           title: const Text("The Squad"),
         ),
         bottomNavigationBar: UserTagger(
-          tagController: _tagController,
-          textEditingController: _controller,
+          tagStyle: const TextStyle(color: Colors.pink),
+          tagController: _controller,
           onSearch: (query) {
             searchViewModel.search(query);
           },
-          overlay: UserListView(tagController: _tagController),
+          overlay: UserListView(tagController: _controller),
           builder: (context, containerKey) {
             return CommentTextField(
               focusNode: _focusNode,
@@ -67,8 +66,8 @@ class _HomeViewState extends State<HomeView> {
               controller: _controller,
               onSend: () {
                 FocusScope.of(context).unfocus();
-                homeViewModel.addPost(_tagController.text);
-                _tagController.clear();
+                homeViewModel.addPost(_controller.formattedText);
+                _controller.clear();
               },
             );
           },
