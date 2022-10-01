@@ -49,7 +49,7 @@ Explore detailed examples [here](https://github.com/Crazelu/usertagger/tree/main
 
 ## Screenshots 📷
 
-<img src="https://raw.githubusercontent.com/Crazelu/usertagger/main/screenshots/screenshot1.png" width="270" height="600"> <img src="https://raw.githubusercontent.com/Crazelu/storiez/main/screenshots/screenshot1.png" width="270" height="600">
+<img src="https://raw.githubusercontent.com/Crazelu/usertagger/main/screenshots/screenshot1.png" width="300" height="600"> <img src="https://raw.githubusercontent.com/Crazelu/storiez/main/screenshots/screenshot1.png" width="300" height="600">
 
 ## Contributions 🫱🏾‍🫲🏼
 
