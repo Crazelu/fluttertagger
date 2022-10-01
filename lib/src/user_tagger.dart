@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:usertagger/src/tagged_text.dart';
 import 'package:usertagger/src/trie.dart';
 
+//TODO: When text is edited, check for TaggedTexts that have their
+//TODO: positions made invalid and modify
+//TODO: (+1 if text is added, -1 if text is removed)
+//TODO: Update _taggedUsers map, clear Trie and reinsert
+
+//TODO: Add overlay animation
 typedef UserTaggerWidgetBuilder = Widget Function(
   BuildContext context,
   GlobalKey key,
@@ -12,15 +18,15 @@ class UserTagger extends StatefulWidget {
   const UserTagger({
     Key? key,
     required this.overlay,
-    required this.textEditingController,
+    required this.tagController,
     required this.onSearch,
     required this.builder,
     this.padding = EdgeInsets.zero,
     this.overlayHeight = 380,
     this.onFormattedTextChanged,
     this.searchRegex,
-    this.tagController,
     this.tagTextFormatter,
+    this.tagStyle,
   }) : super(key: key);
 
   ///Widget shown in an overlay when search context is entered.
@@ -48,10 +54,7 @@ class UserTagger extends StatefulWidget {
   final TagTextFormatter? tagTextFormatter;
 
   /// {@macro usertagger}
-  final UserTagController? tagController;
-
-  ///Child TextField's controller.
-  final TextEditingController textEditingController;
+  final UserTaggerController tagController;
 
   ///Callback to dispatch updated formatted text.
   final void Function(String)? onFormattedTextChanged;
@@ -68,12 +71,15 @@ class UserTagger extends StatefulWidget {
   ///{@macro searchRegex}
   final RegExp? searchRegex;
 
+  ///TextStyle for tags.
+  final TextStyle? tagStyle;
+
   @override
   State<UserTagger> createState() => _UserTaggerState();
 }
 
 class _UserTaggerState extends State<UserTagger> {
-  TextEditingController get controller => widget.textEditingController;
+  UserTaggerController get controller => widget.tagController;
   late final _parentContainerKey = GlobalKey(
     debugLabel: "TextField Container Key",
   );
@@ -90,7 +96,7 @@ class _UserTaggerState extends State<UserTagger> {
 
   ///Updates formatted text
   void _onFormattedTextChanged() {
-    widget.tagController?._onTextChanged(_formattedText);
+    controller._onTextChanged(_formattedText);
     widget.onFormattedTextChanged?.call(_formattedText);
   }
 
@@ -492,6 +498,7 @@ class _UserTaggerState extends State<UserTagger> {
           tag.startIndex <= length + 1 &&
           length + 1 < tag.endIndex) {
         _defer = true;
+        print("YEET");
         controller.selection = TextSelection.fromPosition(
           TextPosition(offset: tag.endIndex),
         );
@@ -613,16 +620,17 @@ class _UserTaggerState extends State<UserTagger> {
   @override
   void initState() {
     super.initState();
+    controller._setTrie(_tagTrie);
+    controller._setTagStyle(widget.tagStyle);
     controller.addListener(_tagListener);
-    widget.tagController?._onClear(() {
+    controller._onClear(() {
       _taggedUsers.clear();
       _tagTrie.clear();
-      controller.clear();
     });
-    widget.tagController?._onDismissOverlay(() {
+    controller._onDismissOverlay(() {
       _shouldHideOverlay(true);
     });
-    widget.tagController?._registerTagUserCallback(_tagUser);
+    controller._registerTagUserCallback(_tagUser);
   }
 
   @override
@@ -643,7 +651,19 @@ class _UserTaggerState extends State<UserTagger> {
 ///This object exposes callback registration bindings to enable clearing
 ///[UserTagger]'s tags, dismissing overlay and retrieving formatted text.
 /// {@endtemplate}
-class UserTagController {
+class UserTaggerController extends TextEditingController {
+  late Trie _trie = Trie();
+
+  void _setTrie(Trie trie) {
+    _trie = trie;
+  }
+
+  TextStyle? _tagStyle;
+
+  void _setTagStyle(TextStyle? style) {
+    _tagStyle = style;
+  }
+
   Function? _clearCallback;
   Function? _dismissOverlayCallback;
   Function(String id, String name)? _tagUserCallback;
@@ -651,11 +671,13 @@ class UserTagController {
   late String _text = "";
 
   ///Formatted text from [UserTagger]
-  String get text => _text;
+  String get formattedText => _text;
 
   ///Clears [UserTagger] internal tagged users state
+  @override
   void clear() {
     _clearCallback?.call();
+    super.clear();
   }
 
   ///Dismisses user list overlay
@@ -689,5 +711,60 @@ class UserTagController {
   ///Registers callback for tagging a user
   void _registerTagUserCallback(Function(String id, String name) callback) {
     _tagUserCallback = callback;
+  }
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    assert(!value.composing.isValid ||
+        !withComposing ||
+        value.isComposingRangeValid);
+
+    return _buildTextSpan(style);
+  }
+
+  ///
+  TextSpan _buildTextSpan(TextStyle? style) {
+    if (text.isEmpty) return const TextSpan();
+
+    final splitText = text.split(" ");
+
+    List<TextSpan> spans = [];
+    int start = 0;
+    int end = splitText.first.length;
+
+    for (int i = 0; i < splitText.length; i++) {
+      final currentText = splitText[i];
+      final taggedText = _trie.search(currentText, start);
+
+      if (taggedText == null) {
+        start = end + 1;
+        if (i + 1 < splitText.length) {
+          end = start + splitText[i + 1].length;
+        }
+        spans.add(TextSpan(text: "$currentText ", style: style));
+        continue;
+      }
+
+      if (taggedText.startIndex == start) {
+        String suffix = currentText.substring(taggedText.text.length);
+        start = end + 1;
+        if (i + 1 < splitText.length) {
+          end = start + splitText[i + 1].length;
+        }
+        spans.add(TextSpan(text: taggedText.text, style: _tagStyle));
+        spans.add(TextSpan(text: "$suffix "));
+      } else {
+        start = end + 1;
+        if (i + 1 < splitText.length) {
+          end = start + splitText[i + 1].length;
+        }
+        spans.add(TextSpan(text: "$currentText "));
+      }
+    }
+    return TextSpan(children: spans, style: style);
   }
 }

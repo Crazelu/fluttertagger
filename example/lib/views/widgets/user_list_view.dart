@@ -5,7 +5,7 @@ import 'package:example/views/widgets/loading_indicator.dart';
 import 'package:usertagger/usertagger.dart';
 
 class UserListView extends StatelessWidget {
-  final UserTagController tagController;
+  final UserTaggerController tagController;
   const UserListView({
     Key? key,
     required this.tagController,
