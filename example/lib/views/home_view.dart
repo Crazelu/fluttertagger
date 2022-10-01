@@ -53,7 +53,7 @@ class _HomeViewState extends State<HomeView> {
         ),
         bottomNavigationBar: UserTagger(
           tagStyle: const TextStyle(color: Colors.pink),
-          tagController: _controller,
+          controller: _controller,
           onSearch: (query) {
             searchViewModel.search(query);
           },

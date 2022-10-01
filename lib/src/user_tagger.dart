@@ -18,7 +18,7 @@ class UserTagger extends StatefulWidget {
   const UserTagger({
     Key? key,
     required this.overlay,
-    required this.tagController,
+    required this.controller,
     required this.onSearch,
     required this.builder,
     this.padding = EdgeInsets.zero,
@@ -53,8 +53,8 @@ class UserTagger extends StatefulWidget {
   ///Specify this parameter to use a different format.
   final TagTextFormatter? tagTextFormatter;
 
-  /// {@macro usertagger}
-  final UserTaggerController tagController;
+  /// {@macro userTaggerController}
+  final UserTaggerController controller;
 
   ///Callback to dispatch updated formatted text.
   final void Function(String)? onFormattedTextChanged;
@@ -79,7 +79,7 @@ class UserTagger extends StatefulWidget {
 }
 
 class _UserTaggerState extends State<UserTagger> {
-  UserTaggerController get controller => widget.tagController;
+  UserTaggerController get controller => widget.controller;
   late final _parentContainerKey = GlobalKey(
     debugLabel: "TextField Container Key",
   );
@@ -646,7 +646,7 @@ class _UserTaggerState extends State<UserTagger> {
   }
 }
 
-/// {@template usertagger}
+/// {@template userTaggerController}
 ///Controller for [UserTagger].
 ///This object exposes callback registration bindings to enable clearing
 ///[UserTagger]'s tags, dismissing overlay and retrieving formatted text.
