@@ -2,11 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:usertagger/src/tagged_text.dart';
 import 'package:usertagger/src/trie.dart';
 
-//TODO: When text is edited, check for TaggedTexts that have their
-//TODO: positions made invalid and modify
-//TODO: (+1 if text is added, -1 if text is removed)
-//TODO: Update _taggedUsers map, clear Trie and reinsert
-
 //TODO: Add overlay animation
 typedef UserTaggerWidgetBuilder = Widget Function(
   BuildContext context,
@@ -23,6 +18,7 @@ class UserTagger extends StatefulWidget {
     required this.builder,
     this.padding = EdgeInsets.zero,
     this.overlayHeight = 380,
+    this.triggerCharacter = "@",
     this.onFormattedTextChanged,
     this.searchRegex,
     this.tagTextFormatter,
@@ -73,6 +69,10 @@ class UserTagger extends StatefulWidget {
 
   ///TextStyle for tags.
   final TextStyle? tagStyle;
+
+  ///Character that initiates the search context.
+  ///E.g, "@" to search for users or "#" for hashtags.
+  final String triggerCharacter;
 
   @override
   State<UserTagger> createState() => _UserTaggerState();
@@ -126,7 +126,7 @@ class _UserTaggerState extends State<UserTagger> {
         } else {
           _computeSize();
           _overlayEntry = _createOverlay();
-          Overlay.of(context)!.insert(_overlayEntry!);
+          Overlay.of(context).insert(_overlayEntry!);
         }
       });
     } catch (e) {
@@ -153,6 +153,8 @@ class _UserTaggerState extends State<UserTagger> {
 
   ///Table of tagged user names and their ids
   late final Map<TaggedText, String> _taggedUsers = {};
+
+  String get triggerCharacter => widget.triggerCharacter;
 
   ///Formatted text where tagged user names are replaced with
   ///the result of calling [TagTextFormatter] if it's not null.
@@ -192,7 +194,8 @@ class _UserTaggerState extends State<UserTagger> {
 
       if (taggedText.startIndex == start) {
         String suffix = text.substring(taggedText.text.length);
-        String formattedTagText = taggedText.text.replaceAll("@", "");
+        String formattedTagText =
+            taggedText.text.replaceAll(triggerCharacter, "");
         formattedTagText =
             _formatTagText(_taggedUsers[taggedText]!, formattedTagText);
 
@@ -227,16 +230,16 @@ class _UserTaggerState extends State<UserTagger> {
     _shouldSearch = false;
     _shouldHideOverlay(true);
 
-    name = "@${name.trim()}";
+    name = "$triggerCharacter${name.trim()}";
     id = id.trim();
 
     final text = controller.text;
     late final position = controller.selection.base.offset - 1;
     int index = 0;
     if (position != text.length - 1) {
-      index = text.substring(0, position).lastIndexOf("@");
+      index = text.substring(0, position).lastIndexOf(triggerCharacter);
     } else {
-      index = text.lastIndexOf("@");
+      index = text.lastIndexOf(triggerCharacter);
     }
     if (index >= 0) {
       _defer = true;
@@ -249,7 +252,7 @@ class _UserTaggerState extends State<UserTagger> {
       } else {
         newText = text.replaceRange(index, position + 1, "$name ");
       }
-
+      final oldCachedText = _lastCachedText;
       _lastCachedText = newText;
       controller.text = newText;
       _defer = true;
@@ -268,6 +271,12 @@ class _UserTaggerState extends State<UserTagger> {
         TextPosition(
           offset: offset + 1,
         ),
+      );
+
+      _recomputeTags(
+        oldCachedText,
+        newText,
+        taggedText.startIndex + 1,
       );
 
       _onFormattedTextChanged();
@@ -300,7 +309,7 @@ class _UserTaggerState extends State<UserTagger> {
         return false;
       }
       final position = controller.selection.base.offset - 1;
-      if (text[position] == "@") {
+      if (text[position] == triggerCharacter) {
         _shouldSearch = true;
         return false;
       }
@@ -327,7 +336,7 @@ class _UserTaggerState extends State<UserTagger> {
   ///Otherwise, returns `false`.
   bool _backtrackAndSelect(TaggedText tag) {
     String text = controller.text;
-    if (!text.contains("@")) return false;
+    if (!text.contains(triggerCharacter)) return false;
 
     final length = controller.selection.base.offset;
 
@@ -345,10 +354,10 @@ class _UserTaggerState extends State<UserTagger> {
     late String temp = "";
 
     for (int i = length; i >= 0; i--) {
-      if (i == length && text[i] == "@") return false;
+      if (i == length && text[i] == triggerCharacter) return false;
 
       temp = text[i] + temp;
-      if (text[i] == "@" &&
+      if (text[i] == triggerCharacter &&
           temp.length > 1 &&
           temp == tag.text &&
           i == tag.startIndex) {
@@ -379,10 +388,15 @@ class _UserTaggerState extends State<UserTagger> {
     _tagTrie.clear();
     _tagTrie.insertAll(_taggedUsers.keys);
     _selectedTag = null;
+    final oldCachedText = _lastCachedText;
     _lastCachedText = controller.text;
+
+    final pos = _startOffset!;
     _startOffset = null;
     _endOffset = null;
     _isTagSelected = false;
+
+    _recomputeTags(oldCachedText, _lastCachedText, pos);
     _onFormattedTextChanged();
   }
 
@@ -417,9 +431,9 @@ class _UserTaggerState extends State<UserTagger> {
 
   ///This is triggered when deleting text from TextField that isn't
   ///a tagged user. Useful for continuing search without having to
-  ///type `@` first.
+  ///type [triggerCharacter] first.
   ///
-  ///E.g, if you typed
+  ///E.g, assuming [triggerCharacter] is '@', if you typed
   ///```dart
   ///@lucky|
   ///```
@@ -436,26 +450,28 @@ class _UserTaggerState extends State<UserTagger> {
   ///```dart
   ///@luck|
   ///```
-  ///the search context is entered again and the text after the `@` is
-  ///sent as the search query.
+  ///the search context is entered again and the text after the
+  ///[triggerCharacter] is sent as the search query.
   ///
   ///Returns `false` when a search query is found from back tracking.
   ///Otherwise, returns `true`.
   bool _backtrackAndSearch() {
     String text = controller.text;
-    if (!text.contains("@")) return true;
+    if (!text.contains(triggerCharacter)) return true;
 
     final length = controller.selection.base.offset - 1;
 
     late String temp = "";
 
     for (int i = length; i >= 0; i--) {
-      if (i == length && text[i] == "@") return true;
+      if (i == length && text[i] == triggerCharacter) return true;
 
-      if (!_regExp.hasMatch(text[i]) && text[i] != "@") return true;
+      if (!_regExp.hasMatch(text[i]) && text[i] != triggerCharacter) {
+        return true;
+      }
 
       temp = text[i] + temp;
-      if (text[i] == "@" && temp.length > 1) {
+      if (text[i] == triggerCharacter && temp.length > 1) {
         _shouldSearch = true;
         _isTagSelected = false;
         _isBacktrackingToSearch = true;
@@ -477,28 +493,27 @@ class _UserTaggerState extends State<UserTagger> {
   ///of the tagged user.
   void _shiftCursorForTaggedUser() {
     String text = controller.text;
-    if (!text.contains("@")) return;
+    if (!text.contains(triggerCharacter)) return;
     final length = controller.selection.base.offset - 1;
 
     late String temp = "";
 
     for (int i = length; i >= 0; i--) {
-      if (i == length && text[i] == "@") {
-        temp = "@";
+      if (i == length && text[i] == triggerCharacter) {
+        temp = triggerCharacter;
         break;
       }
 
       temp = text[i] + temp;
-      if (text[i] == "@" && temp.length > 1) break;
+      if (text[i] == triggerCharacter && temp.length > 1) break;
     }
 
-    if (temp.isEmpty || !temp.contains("@")) return;
+    if (temp.isEmpty || !temp.contains(triggerCharacter)) return;
     for (var tag in _taggedUsers.keys) {
       if (length + 1 > tag.startIndex &&
           tag.startIndex <= length + 1 &&
           length + 1 < tag.endIndex) {
         _defer = true;
-        print("YEET");
         controller.selection = TextSelection.fromPosition(
           TextPosition(offset: tag.endIndex),
         );
@@ -511,7 +526,7 @@ class _UserTaggerState extends State<UserTagger> {
   ///search context and tagged user selection.
   ///
   ///Triggers search:
-  ///Starts the search context when last entered character is `@`.
+  ///Starts the search context when last entered character is [triggerCharacter].
   ///
   ///Ends Search:
   ///Exits search context and hides overlay when a terminating character
@@ -528,6 +543,34 @@ class _UserTaggerState extends State<UserTagger> {
       _shouldSearch = false;
       _isBacktrackingToSearch = false;
       _shouldHideOverlay(true);
+    }
+
+    if (currentCursorPosition < text.length - 1 &&
+        _taggedUsers.keys
+            .any((e) => e.startIndex == currentCursorPosition - 1)) {
+      final char = text.substring(_lastCursorPosition, currentCursorPosition);
+
+      if (char.trim().isNotEmpty) {
+        final newText = text.replaceRange(
+            _lastCursorPosition, currentCursorPosition, "$char ");
+        _defer = true;
+        final oldCachedText = _lastCachedText;
+
+        final pos = _lastCursorPosition;
+
+        _lastCachedText = newText;
+        controller.text = newText;
+
+        controller.selection = TextSelection.fromPosition(
+          TextPosition(
+            offset: currentCursorPosition,
+          ),
+        );
+        _recomputeTags(oldCachedText, newText, pos);
+        _lastCursorPosition = currentCursorPosition;
+
+        return;
+      }
     }
 
     _lastCursorPosition = currentCursorPosition;
@@ -551,14 +594,20 @@ class _UserTaggerState extends State<UserTagger> {
     }
 
     late final position = controller.selection.base.offset - 1;
+    final oldCachedText = _lastCachedText;
 
-    if (_shouldSearch && position != text.length - 1 && text.contains("@")) {
+    if (_shouldSearch &&
+        position != text.length - 1 &&
+        text.contains(triggerCharacter)) {
       _extractAndSearch(text, position);
+      _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
+      _lastCachedText = text;
       return;
     }
 
     if (_lastCachedText == text) {
       _shiftCursorForTaggedUser();
+      _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
       _onFormattedTextChanged();
       return;
     }
@@ -570,15 +619,19 @@ class _UserTaggerState extends State<UserTagger> {
         return;
       }
       _shiftCursorForTaggedUser();
+
       final hideOverlay = _backtrackAndSearch();
       if (hideOverlay) _shouldHideOverlay(true);
+      _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
       _onFormattedTextChanged();
       return;
     }
+
     _lastCachedText = text;
 
-    if (text[position] == "@") {
+    if (text[position] == triggerCharacter) {
       _shouldSearch = true;
+      _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
       _onFormattedTextChanged();
       return;
     }
@@ -592,15 +645,46 @@ class _UserTaggerState extends State<UserTagger> {
     } else {
       _shouldHideOverlay(true);
     }
+
+    _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
+
     _onFormattedTextChanged();
   }
 
-  ///Extract text appended to the last `@` symbol found
+  void _recomputeTags(String oldCachedText, String currentText, int position) {
+    final currentCursorPosition = controller.selection.base.offset;
+    if (currentCursorPosition != currentText.length) {
+      Map<TaggedText, String> newTable = {};
+      _tagTrie.clear();
+
+      for (var tag in _taggedUsers.keys) {
+        if (tag.startIndex >= position) {
+          final newTag = TaggedText(
+            startIndex:
+                tag.startIndex + currentText.length - oldCachedText.length,
+            endIndex: tag.endIndex + currentText.length - oldCachedText.length,
+            text: tag.text,
+          );
+
+          _tagTrie.insert(newTag);
+          newTable[newTag] = _taggedUsers[tag]!;
+        } else {
+          _tagTrie.insert(tag);
+          newTable[tag] = _taggedUsers[tag]!;
+        }
+      }
+
+      _taggedUsers.clear();
+      _taggedUsers.addAll(newTable);
+    }
+  }
+
+  ///Extracts text appended to the last [triggerCharacter] symbol found
   ///in the substring of [text] up until [endOffset]
   ///and performs a user search.
   void _extractAndSearch(String text, int endOffset) {
     try {
-      int index = text.substring(0, endOffset).lastIndexOf("@");
+      int index = text.substring(0, endOffset).lastIndexOf(triggerCharacter);
 
       if (index < 0) return;
 
