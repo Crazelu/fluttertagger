@@ -47,7 +47,7 @@ class PostWidget extends StatelessWidget {
                       onUserTagPressed: (userId) {
                         //typically, you'd navigate to details screen
                         //and fetch user details with userId
-                        print(userId);
+                        debugPrint(userId);
                       },
                     ),
                   ),

@@ -93,14 +93,9 @@ class CustomText extends StatelessWidget {
 
   bool _isEmail(String? email) {
     if (email != null) {
-      String p = "[a-zA-Z0-9\+\.\_\%\-\+]{1,256}" +
-          "\\@" +
-          "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
-          "(" +
-          "\\." +
-          "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
-          ")+";
-      return RegExp(p).hasMatch(email);
+      String source =
+          r"[a-zA-Z0-9\+\.\_\%\-\+]{1,256}\\@[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}(\\.[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25})+";
+      return RegExp(source).hasMatch(email);
     }
     return false;
   }
@@ -266,6 +261,9 @@ class CustomUserTagElement extends LinkableElement {
 
   @override
   bool operator ==(other) => equals(other);
+
+  @override
+  int get hashCode => Object.hashAll([userId, name]);
 
   @override
   bool equals(other) =>
