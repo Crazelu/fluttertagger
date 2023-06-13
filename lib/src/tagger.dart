@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertagger/src/tagged_text.dart';
 import 'package:fluttertagger/src/trie.dart';
 
-//TODO: Add overlay animation
 typedef FlutterTaggerWidgetBuilder = Widget Function(
   BuildContext context,
   GlobalKey key,
@@ -23,9 +22,10 @@ class FlutterTagger extends StatefulWidget {
     this.searchRegex,
     this.tagTextFormatter,
     this.tagStyle,
+    this.animationController,
   }) : super(key: key);
 
-  ///Widget shown in an overlay when search context is entered.
+  ///Widget shown in the overlay when search context is active.
   final Widget overlay;
 
   ///Padding applied to [overlay].
@@ -34,8 +34,8 @@ class FlutterTagger extends StatefulWidget {
   ///[overlay]'s height.
   final double overlayHeight;
 
-  ///Formats and replaces tagged user names.
-  ///By default, tagged user names are replaced in this format:
+  ///Formats and replaces tags for raw text retrieval.
+  ///By default, tags are replaced in this format:
   ///```dart
   ///"@Lucky Ebere"
   ///```
@@ -55,12 +55,12 @@ class FlutterTagger extends StatefulWidget {
   ///Callback to dispatch updated formatted text.
   final void Function(String)? onFormattedTextChanged;
 
-  ///Triggered with the search query whenever [UserTagger]
+  ///Triggered with the search query whenever [FlutterTagger]
   ///enters the search context.
   final void Function(String) onSearch;
 
   ///Parent wrapper widget builder.
-  ///Returned widget should have a Container as parent widget
+  ///Returned widget should have a [Container] as parent widget
   ///with the [GlobalKey] as its key.
   final FlutterTaggerWidgetBuilder builder;
 
@@ -73,6 +73,9 @@ class FlutterTagger extends StatefulWidget {
   ///Character that initiates the search context.
   ///E.g, "@" to search for users or "#" for hashtags.
   final String triggerCharacter;
+
+  ///Controller for the overlay's animation;
+  final AnimationController? animationController;
 
   @override
   State<FlutterTagger> createState() => _FlutterTaggerState();
@@ -88,6 +91,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   late double _width = 0;
   late bool _hideOverlay = true;
   OverlayEntry? _overlayEntry;
+  late final OverlayState _overlayState = Overlay.of(context);
 
   ///Formats tag text to include id
   String _formatTagText(String id, String name) {
@@ -121,17 +125,33 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       setState(() {
         _hideOverlay = val;
         if (_hideOverlay) {
-          _overlayEntry?.remove();
-          _overlayEntry = null;
+          widget.animationController?.reverse();
+          if (widget.animationController == null) {
+            _overlayEntry?.remove();
+            _overlayEntry = null;
+          }
         } else {
+          _overlayEntry?.remove();
+
           _computeSize();
           _overlayEntry = _createOverlay();
-          Overlay.of(context).insert(_overlayEntry!);
+          _overlayState.insert(_overlayEntry!);
+
+          widget.animationController?.forward();
         }
       });
     } catch (e) {
       debugPrint(e.toString());
     }
+  }
+
+  void _animationControllerListener() {
+    if (widget.animationController?.status == AnimationStatus.dismissed &&
+        _overlayEntry != null) {
+      _overlayEntry?.remove();
+      _overlayEntry = null;
+    }
+    _overlayState.setState(() {});
   }
 
   ///Creates an overlay to show search result
@@ -309,7 +329,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
         return false;
       }
       final position = controller.selection.base.offset - 1;
-      if (text[position] == triggerCharacter) {
+      if (position >= 0 && text[position] == triggerCharacter) {
         _shouldSearch = true;
         return false;
       }
@@ -475,7 +495,10 @@ class _FlutterTaggerState extends State<FlutterTagger> {
         _shouldSearch = true;
         _isTagSelected = false;
         _isBacktrackingToSearch = true;
-        _extractAndSearch(controller.text, length);
+        if (controller.text.isNotEmpty) {
+          _extractAndSearch(controller.text, length);
+        }
+
         return false;
       }
     }
@@ -603,7 +626,8 @@ class _FlutterTaggerState extends State<FlutterTagger> {
 
     if (_shouldSearch &&
         position != text.length - 1 &&
-        text.contains(triggerCharacter)) {
+        text.contains(triggerCharacter) &&
+        position >= 0) {
       _extractAndSearch(text, position);
       _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
       _lastCachedText = text;
@@ -645,7 +669,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       _shouldSearch = false;
     }
 
-    if (_shouldSearch) {
+    if (_shouldSearch && text.isNotEmpty) {
       _extractAndSearch(text, position);
     } else {
       _shouldHideOverlay(true);
@@ -656,6 +680,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     _onFormattedTextChanged();
   }
 
+  ///Recomputes affected tag positions when text value is modified.
   void _recomputeTags(String oldCachedText, String currentText, int position) {
     final currentCursorPosition = controller.selection.base.offset;
     if (currentCursorPosition != currentText.length) {
@@ -720,12 +745,14 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       _shouldHideOverlay(true);
     });
     controller._registerAddTagCallback(_addTag);
+    widget.animationController?.addListener(_animationControllerListener);
   }
 
   @override
   void dispose() {
     controller.removeListener(_tagListener);
     _overlayEntry?.remove();
+    widget.animationController?.removeListener(_animationControllerListener);
     super.dispose();
   }
 
