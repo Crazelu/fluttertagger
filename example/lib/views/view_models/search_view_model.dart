@@ -23,7 +23,6 @@ class SearchViewModel {
     query = query.toLowerCase().trim();
 
     _users.value = [];
-    _users.notifyListeners();
 
     _setLoading(true);
 
@@ -36,8 +35,8 @@ class SearchViewModel {
               user.fullName.toLowerCase().contains(query),
         )
         .toList();
-    _users.value = result;
-    _users.notifyListeners();
+
+    _users.value = [...result];
     _setLoading(false);
   }
 }

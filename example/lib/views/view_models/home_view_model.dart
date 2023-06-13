@@ -14,8 +14,8 @@ class HomeViewModel {
       poster: User.anon(),
       time: "now",
     );
-
-    _posts.value.add(post);
-    _posts.notifyListeners();
+    final postsCopy = _posts.value;
+    postsCopy.add(post);
+    _posts.value = [...postsCopy];
   }
 }
