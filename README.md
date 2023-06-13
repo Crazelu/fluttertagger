@@ -1,6 +1,6 @@
 ## FlutterTagger
 
-FlutterTagger is a Flutter package that allows for the extension of TextFields to provide tagging capabilities. A typical use case is in social apps where tagging users or hashtags is required.
+FlutterTagger is a Flutter library that allows for the extension of TextFields to provide tagging capabilities. A typical use case is in social apps where tagging users or hashtags is required.
 
 ## Install 🚀
 
