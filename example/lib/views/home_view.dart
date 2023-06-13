@@ -14,7 +14,12 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
+
+  double overlayHeight = 380;
+
   late final homeViewModel = HomeViewModel();
   late final _controller = FlutterTaggerController();
   late final _focusNode = FocusNode();
@@ -29,10 +34,25 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     _focusNode.addListener(_focusListener);
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+
+    _animation = Tween<Offset>(
+      begin: const Offset(0, 0.5),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _animationController.dispose();
     _focusNode.removeListener(_focusListener);
     _focusNode.dispose();
     _controller.dispose();
@@ -52,12 +72,17 @@ class _HomeViewState extends State<HomeView> {
           title: const Text("The Squad"),
         ),
         bottomNavigationBar: FlutterTagger(
+          overlayHeight: overlayHeight,
+          animationController: _animationController,
           tagStyle: const TextStyle(color: Colors.pink),
           controller: _controller,
           onSearch: (query) {
             searchViewModel.search(query);
           },
-          overlay: UserListView(tagController: _controller),
+          overlay: UserListView(
+            animation: _animation,
+            tagController: _controller,
+          ),
           builder: (context, containerKey) {
             return CommentTextField(
               focusNode: _focusNode,
