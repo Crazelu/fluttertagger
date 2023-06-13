@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:usertagger/src/tagged_text.dart';
-import 'package:usertagger/src/trie.dart';
+import 'package:fluttertagger/src/tagged_text.dart';
+import 'package:fluttertagger/src/trie.dart';
 
 //TODO: Add overlay animation
-typedef UserTaggerWidgetBuilder = Widget Function(
+typedef FlutterTaggerWidgetBuilder = Widget Function(
   BuildContext context,
   GlobalKey key,
 );
 typedef TagTextFormatter = String Function(String id, String name);
 
-class UserTagger extends StatefulWidget {
-  const UserTagger({
+class FlutterTagger extends StatefulWidget {
+  const FlutterTagger({
     Key? key,
     required this.overlay,
     required this.controller,
@@ -49,8 +49,8 @@ class UserTagger extends StatefulWidget {
   ///Specify this parameter to use a different format.
   final TagTextFormatter? tagTextFormatter;
 
-  /// {@macro userTaggerController}
-  final UserTaggerController controller;
+  /// {@macro flutterTaggerController}
+  final FlutterTaggerController controller;
 
   ///Callback to dispatch updated formatted text.
   final void Function(String)? onFormattedTextChanged;
@@ -62,7 +62,7 @@ class UserTagger extends StatefulWidget {
   ///Parent wrapper widget builder.
   ///Returned widget should have a Container as parent widget
   ///with the [GlobalKey] as its key.
-  final UserTaggerWidgetBuilder builder;
+  final FlutterTaggerWidgetBuilder builder;
 
   ///{@macro searchRegex}
   final RegExp? searchRegex;
@@ -75,11 +75,11 @@ class UserTagger extends StatefulWidget {
   final String triggerCharacter;
 
   @override
-  State<UserTagger> createState() => _UserTaggerState();
+  State<FlutterTagger> createState() => _FlutterTaggerState();
 }
 
-class _UserTaggerState extends State<UserTagger> {
-  UserTaggerController get controller => widget.controller;
+class _FlutterTaggerState extends State<FlutterTagger> {
+  FlutterTaggerController get controller => widget.controller;
   late final _parentContainerKey = GlobalKey(
     debugLabel: "TextField Container Key",
   );
@@ -147,18 +147,18 @@ class _UserTaggerState extends State<UserTagger> {
     );
   }
 
-  ///Custom trie to hold all tagged usernames.
+  ///Custom trie to hold all tags.
   ///This is quite useful for doing a precise position-based tag search.
   late final Trie _tagTrie = Trie();
 
-  ///Table of tagged user names and their ids
-  late final Map<TaggedText, String> _taggedUsers = {};
+  ///Table of tagged texts and their ids
+  late final Map<TaggedText, String> _tagTable = {};
 
   String get triggerCharacter => widget.triggerCharacter;
 
-  ///Formatted text where tagged user names are replaced with
+  ///Formatted text where tags are replaced with
   ///the result of calling [TagTextFormatter] if it's not null.
-  ///Otherwise, tagged user names are replaced in this format:
+  ///Otherwise, tags are replaced in this format:
   ///```dart
   ///"@Lucky Ebere"
   ///```
@@ -197,7 +197,7 @@ class _UserTaggerState extends State<UserTagger> {
         String formattedTagText =
             taggedText.text.replaceAll(triggerCharacter, "");
         formattedTagText =
-            _formatTagText(_taggedUsers[taggedText]!, formattedTagText);
+            _formatTagText(_tagTable[taggedText]!, formattedTagText);
 
         start = end + 1;
         if (i + 1 < splitText.length) {
@@ -221,12 +221,12 @@ class _UserTaggerState extends State<UserTagger> {
   ///Whether to not execute the [_tagListener] logic
   bool _defer = false;
 
-  ///Current tagged user selected in TextField
+  ///Current tag selected in TextField
   TaggedText? _selectedTag;
 
-  ///Adds [name] and [id] to [_taggedUsers] and
+  ///Adds [name] and [id] to [_tagTable] and
   ///updates content of TextField with [name]
-  void _tagUser(String id, String name) {
+  void _addTag(String id, String name) {
     _shouldSearch = false;
     _shouldHideOverlay(true);
 
@@ -264,7 +264,7 @@ class _UserTaggerState extends State<UserTagger> {
         endIndex: offset,
         text: name,
       );
-      _taggedUsers[taggedText] = id;
+      _tagTable[taggedText] = id;
       _tagTrie.insert(taggedText);
 
       controller.selection = TextSelection.fromPosition(
@@ -283,17 +283,17 @@ class _UserTaggerState extends State<UserTagger> {
     }
   }
 
-  ///Highlights a tagged user from [_taggedUsers] when keyboard action attempts to remove them
-  ///to prompt the user.
+  ///Selects a tag from [_tagTable] when keyboard action attempts to remove it
+  ///so as to prompt the user.
   ///
-  ///Highlighted user when [_removeEditedTags] is triggered is removed from
-  ///the TextField.
+  ///The selected tag is removed from the TextField
+  ///when [_removeEditedTags] is triggered.
   ///
-  ///Does nothing when there is no tagged user or when there's no attempt
-  ///to remove a tagged user from the TextField.
+  ///Does nothing when there is no tag or when there's no attempt
+  ///to remove a tag from the TextField.
   ///
-  ///Returns `true` if a tagged user is either selected or removed
-  ///(if they were previously selected).
+  ///Returns `true` if a tag is either selected or removed
+  ///(if it was previously selected).
   ///Otherwise, returns `false`.
   bool _removeEditedTags() {
     try {
@@ -303,7 +303,7 @@ class _UserTaggerState extends State<UserTagger> {
         return true;
       }
       if (text.isEmpty) {
-        _taggedUsers.clear();
+        _tagTable.clear();
         _tagTrie.clear();
         _lastCachedText = text;
         return false;
@@ -314,7 +314,7 @@ class _UserTaggerState extends State<UserTagger> {
         return false;
       }
 
-      for (var tag in _taggedUsers.keys) {
+      for (var tag in _tagTable.keys) {
         if (tag.endIndex - 1 == position + 1) {
           if (!_isTagSelected) {
             if (_backtrackAndSelect(tag)) return true;
@@ -330,9 +330,9 @@ class _UserTaggerState extends State<UserTagger> {
   }
 
   ///Back tracks from current cursor position to find and select
-  ///a tagged user, if any.
+  ///a tag, if any.
   ///
-  ///Returns `true` if a tagged user is found and selected.
+  ///Returns `true` if a tag is found and selected.
   ///Otherwise, returns `false`.
   bool _backtrackAndSelect(TaggedText tag) {
     String text = controller.text;
@@ -384,9 +384,9 @@ class _UserTaggerState extends State<UserTagger> {
   ///Updates offsets after [_selectedTag] set in [_backtrackAndSelect]
   ///has been removed.
   void _removeSelection() {
-    _taggedUsers.remove(_selectedTag);
+    _tagTable.remove(_selectedTag);
     _tagTrie.clear();
-    _tagTrie.insertAll(_taggedUsers.keys);
+    _tagTrie.insertAll(_tagTable.keys);
     _selectedTag = null;
     final oldCachedText = _lastCachedText;
     _lastCachedText = controller.text;
@@ -400,24 +400,24 @@ class _UserTaggerState extends State<UserTagger> {
     _onFormattedTextChanged();
   }
 
-  ///Whether a tagged user is selected in the TextField
+  ///Whether a tag is selected in the TextField.
   bool _isTagSelected = false;
 
-  ///Start offset for selection in the TextField
+  ///Start offset for selection in the TextField.
   int? _startOffset;
 
-  ///End offset for selection in the TextField
+  ///End offset for selection in the TextField.
   int? _endOffset;
 
   ///Text from the TextField in it's previous state before a new update
   ///(new text input from keyboard or deletion).
   ///
   ///This is necessary to compare and see if changes have occured and to restore
-  ///the text field content when user attempts to remove a tagged user
-  ///so the tagged user can be selected and with further action, be removed.
+  ///the text field content when user attempts to remove a tag
+  ///so that the tag can be selected and with further action, be removed.
   String _lastCachedText = "";
 
-  ///Whether to initiate a user search
+  ///Whether the search context is active.
   bool _shouldSearch = false;
 
   ///{@template searchRegex}
@@ -430,7 +430,7 @@ class _UserTaggerState extends State<UserTagger> {
   bool _isBacktrackingToSearch = false;
 
   ///This is triggered when deleting text from TextField that isn't
-  ///a tagged user. Useful for continuing search without having to
+  ///a tag. Useful for continuing search without having to
   ///type [triggerCharacter] first.
   ///
   ///E.g, assuming [triggerCharacter] is '@', if you typed
@@ -485,12 +485,12 @@ class _UserTaggerState extends State<UserTagger> {
     return true;
   }
 
-  ///Shifts cursor to end of tagged user name
-  ///when an attempt to edit one is made.
+  ///Shifts cursor to end of a tag
+  ///when an attempt to edit it is made.
   ///
   ///This shift of the cursor allows the next backbutton press from the
   ///same position to trigger the selection (and removal on next press)
-  ///of the tagged user.
+  ///of the tag.
   void _shiftCursorForTaggedUser() {
     String text = controller.text;
     if (!text.contains(triggerCharacter)) return;
@@ -509,7 +509,7 @@ class _UserTaggerState extends State<UserTagger> {
     }
 
     if (temp.isEmpty || !temp.contains(triggerCharacter)) return;
-    for (var tag in _taggedUsers.keys) {
+    for (var tag in _tagTable.keys) {
       if (length + 1 > tag.startIndex &&
           tag.startIndex <= length + 1 &&
           length + 1 < tag.endIndex) {
@@ -523,7 +523,7 @@ class _UserTaggerState extends State<UserTagger> {
   }
 
   ///Listener attached to [controller] to listen for change in
-  ///search context and tagged user selection.
+  ///search context and tag selection.
   ///
   ///Triggers search:
   ///Starts the search context when last entered character is [triggerCharacter].
@@ -546,9 +546,13 @@ class _UserTaggerState extends State<UserTagger> {
     }
 
     if (currentCursorPosition < text.length - 1 &&
-        _taggedUsers.keys
-            .any((e) => e.startIndex == currentCursorPosition - 1)) {
-      final char = text.substring(_lastCursorPosition, currentCursorPosition);
+        _tagTable.keys.any((e) => e.startIndex == currentCursorPosition - 1)) {
+      String char;
+      try {
+        char = text.substring(_lastCursorPosition, currentCursorPosition);
+      } catch (e) {
+        return;
+      }
 
       if (char.trim().isNotEmpty) {
         final newText = text.replaceRange(
@@ -574,6 +578,7 @@ class _UserTaggerState extends State<UserTagger> {
     }
 
     _lastCursorPosition = currentCursorPosition;
+
     if (_defer) {
       _defer = false;
       return;
@@ -657,7 +662,7 @@ class _UserTaggerState extends State<UserTagger> {
       Map<TaggedText, String> newTable = {};
       _tagTrie.clear();
 
-      for (var tag in _taggedUsers.keys) {
+      for (var tag in _tagTable.keys) {
         if (tag.startIndex >= position) {
           final newTag = TaggedText(
             startIndex:
@@ -667,15 +672,15 @@ class _UserTaggerState extends State<UserTagger> {
           );
 
           _tagTrie.insert(newTag);
-          newTable[newTag] = _taggedUsers[tag]!;
+          newTable[newTag] = _tagTable[tag]!;
         } else {
           _tagTrie.insert(tag);
-          newTable[tag] = _taggedUsers[tag]!;
+          newTable[tag] = _tagTable[tag]!;
         }
       }
 
-      _taggedUsers.clear();
-      _taggedUsers.addAll(newTable);
+      _tagTable.clear();
+      _tagTable.addAll(newTable);
     }
   }
 
@@ -708,13 +713,13 @@ class _UserTaggerState extends State<UserTagger> {
     controller._setTagStyle(widget.tagStyle);
     controller.addListener(_tagListener);
     controller._onClear(() {
-      _taggedUsers.clear();
+      _tagTable.clear();
       _tagTrie.clear();
     });
     controller._onDismissOverlay(() {
       _shouldHideOverlay(true);
     });
-    controller._registerTagUserCallback(_tagUser);
+    controller._registerAddTagCallback(_addTag);
   }
 
   @override
@@ -730,12 +735,12 @@ class _UserTaggerState extends State<UserTagger> {
   }
 }
 
-/// {@template userTaggerController}
-///Controller for [UserTagger].
+/// {@template flutterTaggerController}
+///Controller for [FlutterTagger].
 ///This object exposes callback registration bindings to enable clearing
-///[UserTagger]'s tags, dismissing overlay and retrieving formatted text.
+///[FlutterTagger]'s tags, dismissing overlay and retrieving formatted text.
 /// {@endtemplate}
-class UserTaggerController extends TextEditingController {
+class FlutterTaggerController extends TextEditingController {
   late Trie _trie = Trie();
 
   void _setTrie(Trie trie) {
@@ -750,14 +755,14 @@ class UserTaggerController extends TextEditingController {
 
   Function? _clearCallback;
   Function? _dismissOverlayCallback;
-  Function(String id, String name)? _tagUserCallback;
+  Function(String id, String name)? _addTagCallback;
 
   late String _text = "";
 
-  ///Formatted text from [UserTagger]
+  ///Formatted text from [FlutterTagger]
   String get formattedText => _text;
 
-  ///Clears [UserTagger] internal tagged users state
+  ///Clears [FlutterTagger] internal tagged users state
   @override
   void clear() {
     _clearCallback?.call();
@@ -769,32 +774,32 @@ class UserTaggerController extends TextEditingController {
     _dismissOverlayCallback?.call();
   }
 
-  ///Tags a user
-  void tagUser({required String id, required String name}) {
-    _tagUserCallback?.call(id, name);
+  ///Adds a tag
+  void addTag({required String id, required String name}) {
+    _addTagCallback?.call(id, name);
   }
 
-  ///Registers callback for clearing [UserTagger]'s
-  ///internal tagged users state.
+  ///Registers callback for clearing [FlutterTagger]'s
+  ///internal tags state.
   void _onClear(Function callback) {
     _clearCallback = callback;
   }
 
-  ///Registers callback for dismissing [UserTagger]'s
+  ///Registers callback for dismissing [FlutterTagger]'s
   ///user list overlay.
   void _onDismissOverlay(Function callback) {
     _dismissOverlayCallback = callback;
   }
 
   ///Registers callback for retrieving updated
-  ///formatted text from [UserTagger].
+  ///formatted text from [FlutterTagger].
   void _onTextChanged(String newText) {
     _text = newText;
   }
 
-  ///Registers callback for tagging a user
-  void _registerTagUserCallback(Function(String id, String name) callback) {
-    _tagUserCallback = callback;
+  ///Registers callback for adding tags
+  void _registerAddTagCallback(Function(String id, String name) callback) {
+    _addTagCallback = callback;
   }
 
   @override
@@ -810,7 +815,7 @@ class UserTaggerController extends TextEditingController {
     return _buildTextSpan(style);
   }
 
-  ///
+  ///Builds text value with tags styled according to [_tagStyle].
   TextSpan _buildTextSpan(TextStyle? style) {
     if (text.isEmpty) return const TextSpan();
 

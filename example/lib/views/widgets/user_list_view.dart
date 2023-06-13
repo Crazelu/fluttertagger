@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:example/models/user.dart';
 import 'package:example/views/view_models/search_view_model.dart';
 import 'package:example/views/widgets/loading_indicator.dart';
-import 'package:usertagger/usertagger.dart';
+import 'package:fluttertagger/fluttertagger.dart';
 
 class UserListView extends StatelessWidget {
-  final UserTaggerController tagController;
+  final FlutterTaggerController tagController;
   const UserListView({
     Key? key,
     required this.tagController,
@@ -75,7 +75,7 @@ class UserListView extends StatelessWidget {
                                   title: Text(user.fullName),
                                   subtitle: Text("@${user.userName}"),
                                   onTap: () {
-                                    tagController.tagUser(
+                                    tagController.addTag(
                                       id: user.id,
                                       name: user.userName,
                                     );

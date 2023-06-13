@@ -5,7 +5,7 @@ import 'package:example/views/view_models/search_view_model.dart';
 import 'package:example/views/widgets/comment_text_field.dart';
 import 'package:example/views/widgets/post_widget.dart';
 import 'package:example/views/widgets/user_list_view.dart';
-import 'package:usertagger/usertagger.dart';
+import 'package:fluttertagger/fluttertagger.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
@@ -16,7 +16,7 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   late final homeViewModel = HomeViewModel();
-  late final _controller = UserTaggerController();
+  late final _controller = FlutterTaggerController();
   late final _focusNode = FocusNode();
 
   void _focusListener() {
@@ -51,7 +51,7 @@ class _HomeViewState extends State<HomeView> {
           backgroundColor: Colors.redAccent,
           title: const Text("The Squad"),
         ),
-        bottomNavigationBar: UserTagger(
+        bottomNavigationBar: FlutterTagger(
           tagStyle: const TextStyle(color: Colors.pink),
           controller: _controller,
           onSearch: (query) {
