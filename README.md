@@ -23,23 +23,23 @@ import 'package:fluttertagger/fluttertagger.dart';
 
 ```dart
 FlutterTagger(
-          tagController: _tagController,
-          textEditingController: _controller,
+          controller: flutterTaggerController,
           onSearch: (query) {
               //perform search
           },
-          overlay: UserListView(tagController: _tagController),
+          //
+          overlay: SearchResultView(),
           builder: (context, containerKey) {
               //return child TextField wrapped with a Container
               //and pass it `containerKey`
             return CommentTextField(
               focusNode: _focusNode,
               containerKey: containerKey,
-              controller: _controller,
+              controller: flutterTaggerController,
               onSend: () {
                 //perform send action
                 FocusScope.of(context).unfocus();
-                _tagController.clear();
+                flutterTaggerController.clear();
               },
             );
           },
@@ -51,7 +51,7 @@ Explore detailed example demo [here](https://github.com/Crazelu/fluttertagger/tr
 
 ## Screenshots 📷
 
-<img src="https://raw.githubusercontent.com/Crazelu/fluttertagger/main/screenshots/screenshot1.png" width="280" height="600"> <img src="https://raw.githubusercontent.com/Crazelu/fluttertagger/main/screenshots/screenshot2.png" width="280" height="600">
+<img src="https://raw.githubusercontent.com/Crazelu/fluttertagger/main/screenshots/demo.gif" width="280" height="600"> <img src="https://raw.githubusercontent.com/Crazelu/fluttertagger/main/screenshots/screenshot1.png" width="280" height="600"> <img src="https://raw.githubusercontent.com/Crazelu/fluttertagger/main/screenshots/screenshot2.png" width="280" height="600">
 
 ## Contributions 🫱🏾‍🫲🏼
 
