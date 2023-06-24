@@ -49,13 +49,13 @@ FlutterTagger(
 
 Explore detailed example demo [here](https://github.com/Crazelu/fluttertagger/tree/main/example).
 
-## Screenshots 📷
+## Demo 📷
 
-<img src="https://raw.githubusercontent.com/Crazelu/fluttertagger/main/screenshots/demo.gif" width="360" height="800"> 
+<img src="https://raw.githubusercontent.com/Crazelu/fluttertagger/main/assets/demo.gif" width="400" height="800"> 
 
 ## Contributions 🫱🏾‍🫲🏼
 
 Feel free to contribute to this project.
 
-If you find a bug or want a feature, but don't know how to fix/implement it, please fill an [issue](https://github.com/Crazelu/usertagger/issues).  
+If you find a bug or want a feature, but don't know how to fix/implement it, please fill an [issue](https://github.com/Crazelu/fluttertagger/issues).  
 If you fixed a bug or implemented a feature, please send a [pull request](https://github.com/Crazelu/fluttertagger/pulls).
