@@ -8,9 +8,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 
 ```yaml
 dependencies:
-  fluttertagger:
-    git:
-      url: git@github.com:Crazelu/fluttertagger.git
+  fluttertagger: ^1.0.0
 ```
 
 ## Import the package in your project 📥
