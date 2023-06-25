@@ -11,6 +11,8 @@ class _TrieNode {
         indices = {};
 }
 
+///A tree data structure for storing tags
+///and performing efficient tag searches.
 class Trie {
   late _TrieNode _root;
 
@@ -22,7 +24,7 @@ class Trie {
     }
   }
 
-  ///Inserts tag into trie
+  ///Inserts tag into trie.
   void insert(TaggedText tag) {
     int length = tag.text.length;
     _TrieNode node = _root;
@@ -81,6 +83,7 @@ class Trie {
     return tag;
   }
 
+  ///Clears trie.
   void clear() {
     _root = _TrieNode();
   }

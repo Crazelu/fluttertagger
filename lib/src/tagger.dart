@@ -2,13 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:fluttertagger/src/tagged_text.dart';
 import 'package:fluttertagger/src/trie.dart';
 
+///{@macro builder}
 typedef FlutterTaggerWidgetBuilder = Widget Function(
   BuildContext context,
   GlobalKey key,
 );
+
+///Formatter for tags in the [TextField] associated
+///with [FlutterTagger].
 typedef TagTextFormatter = String Function(String id, String tag);
 
+///Provides tagging capabilities (e.g user mentions and adding hashtags)
+///to a [TextField] returned from [builder].
+///
+///Listens to [controller] and activates search context when [triggerCharacter]
+///is detected; sending subsequent text as search query using [onSearch].
+///
+///Search results should be shown in [overlay] which is
+///animated if [animationController] is provided.
+///
+///[FlutterTagger] maintains tag positions during text editing and allows
+///for formatting of the tags in [TextField]'s text value with [tagTextFormatter].
+///
+///Tags in the [TextField] are styled with [tagStyle].
 class FlutterTagger extends StatefulWidget {
+  ///Creates an instance of [FlutterTagger]
   const FlutterTagger({
     Key? key,
     required this.overlay,
@@ -59,9 +77,12 @@ class FlutterTagger extends StatefulWidget {
   ///enters the search context.
   final void Function(String) onSearch;
 
-  ///Parent wrapper widget builder.
+  ///{@template builder}
+  ///Widget builder for [FlutterTagger]'s associated TextField.
+  /// {@endtemplate}
   ///Returned widget should have a [Container] as parent widget
-  ///with the [GlobalKey] as its key.
+  ///with the [GlobalKey] as its key,
+  ///and the [TextField] as its child.
   final FlutterTaggerWidgetBuilder builder;
 
   ///{@macro searchRegex}
@@ -71,10 +92,10 @@ class FlutterTagger extends StatefulWidget {
   final TextStyle? tagStyle;
 
   ///Character that initiates the search context.
-  ///E.g, "@" to search for users or "#" for hashtags.
+  ///E.g, "@" to mention users or "#" for hashtags.
   final String triggerCharacter;
 
-  ///Controller for the overlay's animation;
+  ///Controller for the [overlay]'s animation.
   final AnimationController? animationController;
 
   @override

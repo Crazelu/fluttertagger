@@ -14,3 +14,7 @@
 ## 1.0.0+4
 
 * README update
+
+## 1.0.0+5
+
+* Updates documentation and README example

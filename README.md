@@ -10,7 +10,7 @@
   <a href="https://pub.dev/packages/fluttertagger/score"><img src="https://img.shields.io/pub/points/fluttertagger" alt="pub points"></a>
 </p>
 
-FlutterTagger is a Flutter package that allows for the extension of TextFields to provide tagging capabilities. A typical use case is in social apps where tagging users or hashtags is required.
+FlutterTagger is a Flutter package that allows for the extension of TextFields to provide tagging capabilities. A typical use case is in social apps where user mentions and hashtags features are desired.
 
 ## Install 🚀
 
@@ -18,7 +18,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 
 ```yaml
 dependencies:
-  fluttertagger: ^1.0.0+4
+  fluttertagger: ^1.0.0+5
 ```
 
 ## Import the package in your project 📥
@@ -35,21 +35,31 @@ FlutterTagger(
           onSearch: (query) {
               //perform search
           },
-          //
           overlay: SearchResultView(),
           builder: (context, containerKey) {
               //return child TextField wrapped with a Container
               //and pass it `containerKey`
-            return CommentTextField(
-              focusNode: _focusNode,
-              containerKey: containerKey,
-              controller: flutterTaggerController,
-              onSend: () {
-                //perform send action
-                FocusScope.of(context).unfocus();
-                flutterTaggerController.clear();
-              },
-            );
+              return Container(
+                key: containerKey,
+                child: TextField(
+                    controller: flutterTaggerController,
+                    suffix: IconButton(
+                      onPressed: () {
+                        //get formatted text from controller
+                        final text = flutterTaggerController.formattedText;
+
+                        //perform send action...
+
+                        FocusScope.of(context).unfocus();
+                        flutterTaggerController.clear();
+                      },
+                    icon: const Icon(
+                      Icons.send,
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                ),
+              );
           },
         )
 ```
