@@ -8,7 +8,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 
 ```yaml
 dependencies:
-  fluttertagger: ^1.0.0
+  fluttertagger: ^1.0.0+1
 ```
 
 ## Import the package in your project 📥
@@ -49,7 +49,7 @@ Explore detailed example demo [here](https://github.com/Crazelu/fluttertagger/tr
 
 ## Demo 📷
 
-<img src="https://raw.githubusercontent.com/Crazelu/fluttertagger/main/assets/demo.gif" width="400" height="800"> 
+https://github.com/Crazelu/fluttertagger/assets/58946834/e079487d-93f0-4005-ba7f-40ccfdac0aaf
 
 ## Contributions 🫱🏾‍🫲🏼
 
