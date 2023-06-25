@@ -1,7 +1,7 @@
 ## FlutterTagger
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/crazelu/fluttertagger/main/assets/fluttertagger.svg" max-height="100" alt="FlutterTagger" />
+  <img src="https://raw.githubusercontent.com/crazelu/fluttertagger/main/assets/fluttertagger_banner.svg" max-height="100" alt="FlutterTagger" />
 </p>
 
 <p align="center">
