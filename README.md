@@ -1,6 +1,10 @@
 ## FlutterTagger
 
 <p align="center">
+  <img src="https://raw.githubusercontent.com/crazelu/fluttertagger/main/assets/fluttertagger.svg" max-height="100" alt="FlutterTagger" />
+</p>
+
+<p align="center">
   <a href="https://pub.dev/packages/fluttertagger/score"><img src="https://img.shields.io/pub/likes/fluttertagger" alt="likes"></a>
   <a href="https://pub.dev/packages/fluttertagger/score"><img src="https://img.shields.io/pub/popularity/fluttertagger" alt="popularity"></a>
   <a href="https://pub.dev/packages/fluttertagger/score"><img src="https://img.shields.io/pub/points/fluttertagger" alt="pub points"></a>
