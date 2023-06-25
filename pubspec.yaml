@@ -1,6 +1,6 @@
 name: fluttertagger
 description: A Flutter package that allows for the extension of TextFields to provide tagging capabilities.
-version: 1.0.0+2
+version: 1.0.0+3
 repository: https://github.com/Crazelu/fluttertagger
 issue_tracker: https://github.com/Crazelu/fluttertagger/issues
 

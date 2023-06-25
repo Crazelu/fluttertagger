@@ -8,3 +8,6 @@
 ## 1.0.0+2
 
 * Updates demo
+## 1.0.0+3
+
+* Updates repo banner
