@@ -1,6 +1,12 @@
 ## FlutterTagger
 
-FlutterTagger is a Flutter library that allows for the extension of TextFields to provide tagging capabilities. A typical use case is in social apps where tagging users or hashtags is required.
+<p align="center">
+  <a href="https://pub.dev/packages/fluttertagger/score"><img src="https://img.shields.io/pub/likes/fluttertagger" alt="likes"></a>
+  <a href="https://pub.dev/packages/fluttertagger/score"><img src="https://img.shields.io/pub/popularity/fluttertagger" alt="popularity"></a>
+  <a href="https://pub.dev/packages/fluttertagger/score"><img src="https://img.shields.io/pub/points/fluttertagger" alt="pub points"></a>
+</p>
+
+FlutterTagger is a Flutter package that allows for the extension of TextFields to provide tagging capabilities. A typical use case is in social apps where tagging users or hashtags is required.
 
 ## Install 🚀
 
@@ -8,7 +14,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 
 ```yaml
 dependencies:
-  fluttertagger: ^1.0.0+1
+  fluttertagger: ^1.0.0+2
 ```
 
 ## Import the package in your project 📥
@@ -49,7 +55,7 @@ Explore detailed example demo [here](https://github.com/Crazelu/fluttertagger/tr
 
 ## Demo 📷
 
-https://github.com/Crazelu/fluttertagger/assets/58946834/e079487d-93f0-4005-ba7f-40ccfdac0aaf
+<img src="https://raw.githubusercontent.com/Crazelu/fluttertagger/main/assets/fluttertagger.gif" width="280" alt="Example demo"> 
 
 ## Contributions 🫱🏾‍🫲🏼
 

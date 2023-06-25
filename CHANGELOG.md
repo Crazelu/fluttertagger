@@ -4,3 +4,7 @@
 ## 1.0.0+1
 
 * Fixes SDK version constraints
+
+## 1.0.0+2
+
+* Updates demo
