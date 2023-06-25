@@ -11,3 +11,6 @@
 ## 1.0.0+3
 
 * Updates repo banner
+## 1.0.0+4
+
+* README update
