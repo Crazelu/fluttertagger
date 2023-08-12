@@ -43,7 +43,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   double overlayHeight = 380;
 
   late final homeViewModel = HomeViewModel();
-  late final _controller = FlutterTaggerController();
+  late final _controller = FlutterTaggerController(
+    //Initial text value with tag is formatted internally
+    //after FlutterTaggerControlleris constructed.
+    //After this controller is constructed, if you
+    //wish to update its text value with raw tag string,
+    //call (_controller.formatTags) after that.
+    text: "Hey @11a27531b866ce0016f9e582#brad#",
+  );
   late final _focusNode = FocusNode();
 
   void _focusListener() {
@@ -120,15 +127,16 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           },
         ),
         body: ValueListenableBuilder<List<Post>>(
-            valueListenable: homeViewModel.posts,
-            builder: (_, posts, __) {
-              return ListView.builder(
-                itemCount: posts.length,
-                itemBuilder: (_, index) {
-                  return PostWidget(post: posts[index]);
-                },
-              );
-            }),
+          valueListenable: homeViewModel.posts,
+          builder: (_, posts, __) {
+            return ListView.builder(
+              itemCount: posts.length,
+              itemBuilder: (_, index) {
+                return PostWidget(post: posts[index]);
+              },
+            );
+          },
+        ),
       ),
     );
   }

@@ -18,3 +18,7 @@
 ## 1.0.0+5
 
 * Updates documentation and README example
+## 1.0.0+6
+
+* Adds support for formatting tags in FlutterTaggerController's text value set directly using the `text` setter. 
+* Exposes a `formatTags` method for this purpose.

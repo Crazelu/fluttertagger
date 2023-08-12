@@ -191,7 +191,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
 
   ///Custom trie to hold all tags.
   ///This is quite useful for doing a precise position-based tag search.
-  late final Trie _tagTrie = Trie();
+  late Trie _tagTrie;
 
   ///Table of tagged texts and their ids
   late final Map<TaggedText, String> _tagTable = {};
@@ -651,14 +651,14 @@ class _FlutterTaggerState extends State<FlutterTagger> {
 
     _lastCachedText = text;
 
-    if (text[position] == triggerCharacter) {
+    if (position >= 0 && text[position] == triggerCharacter) {
       _shouldSearch = true;
       _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
       _onFormattedTextChanged();
       return;
     }
 
-    if (!_regExp.hasMatch(text[position])) {
+    if (position >= 0 && !_regExp.hasMatch(text[position])) {
       _shouldSearch = false;
     }
 
@@ -726,8 +726,10 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   @override
   void initState() {
     super.initState();
+    _tagTrie = controller._trie;
+    controller._setDeferCallback(() => _defer = true);
+    controller._setTagTable(_tagTable);
     controller._setTriggerCharacter(triggerCharacter);
-    controller._setTrie(_tagTrie);
     controller._setTagStyle(widget.tagStyle);
     controller.addListener(_tagListener);
     controller._onClear(() {
@@ -761,11 +763,10 @@ class _FlutterTaggerState extends State<FlutterTagger> {
 ///[FlutterTagger]'s tags, dismissing overlay and retrieving formatted text.
 /// {@endtemplate}
 class FlutterTaggerController extends TextEditingController {
-  late Trie _trie = Trie();
+  FlutterTaggerController({String? text}) : super(text: text);
 
-  void _setTrie(Trie trie) {
-    _trie = trie;
-  }
+  late final Trie _trie = Trie();
+  late Map<TaggedText, String> _tagTable;
 
   TextStyle? _tagStyle;
 
@@ -773,12 +774,25 @@ class FlutterTaggerController extends TextEditingController {
     _tagStyle = style;
   }
 
-  late String _triggerCharacter;
+  String? _triggerChar;
+
+  String get _triggerCharacter => _triggerChar!;
 
   void _setTriggerCharacter(String char) {
-    _triggerCharacter = char;
+    _triggerChar = char;
+    _formatTagsCallback ??= () => _formatTags(null, null);
+    _formatTagsCallback?.call();
   }
 
+  void _setTagTable(Map<TaggedText, String> table) {
+    _tagTable = table;
+  }
+
+  void _setDeferCallback(Function callback) {
+    _deferCallback = callback;
+  }
+
+  Function? _deferCallback;
   Function? _clearCallback;
   Function? _dismissOverlayCallback;
   Function(String id, String name)? _addTagCallback;
@@ -787,6 +801,92 @@ class FlutterTaggerController extends TextEditingController {
 
   ///Formatted text from [FlutterTagger]
   String get formattedText => _text;
+
+  Function? _formatTagsCallback;
+
+  /// {@template formatTags}
+  ///Extracts tags from [FlutterTaggerController]'s [text] and formats the textfield to display them as tags.
+  ///This should be called after [FlutterTaggerController] is constructed with a non-null
+  ///text value that contain unformatted tags.
+  ///
+  ///[pattern] -> Pattern to match tags.
+  ///Specify this if you supply your own [FlutterTagger.tagTextFormatter].
+  ///
+  ///[parser] -> Parser to extract id and tag name for regex matches.
+  ///Returned list should have this structure: `[id, tagName]`.
+  ///{@endtemplate}
+  void formatTags({
+    RegExp? pattern,
+    List<String> Function(String)? parser,
+  }) {
+    if (_triggerChar == null) {
+      _formatTagsCallback = () => _formatTags(pattern, parser);
+    } else {
+      _formatTagsCallback?.call();
+    }
+  }
+
+  ///{@macro formatTags}
+  void _formatTags([
+    RegExp? pattern,
+    List<String> Function(String)? parser,
+  ]) {
+    _clearCallback?.call();
+    _text = text;
+    String newText = text;
+
+    pattern ??= RegExp(r'(\@.+?\#.+?\#)');
+    parser ??= (value) {
+      final split = value.split("#");
+      return [split.first.substring(1).trim(), split[1].trim()];
+    };
+
+    final matches = pattern.allMatches(text);
+
+    int diff = 0;
+
+    for (var match in matches) {
+      try {
+        final matchValue = match.group(1)!;
+
+        final idAndTag = parser(matchValue);
+        final tag = "$_triggerCharacter${idAndTag.last.trim()}";
+        final startIndex = match.start;
+        final endIndex = startIndex + tag.length;
+
+        newText = newText.replaceRange(
+          startIndex - diff,
+          startIndex + matchValue.length - diff,
+          tag,
+        );
+
+        final taggedText = TaggedText(
+          startIndex: startIndex - diff,
+          endIndex: endIndex - diff,
+          text: tag,
+        );
+        _tagTable[taggedText] = idAndTag.first;
+        _trie.insert(taggedText);
+
+        diff += matchValue.length - tag.length;
+      } catch (e) {
+        debugPrint(e.toString());
+      }
+    }
+
+    _runDeferedAction(() => text = newText);
+    _runDeferedAction(
+      () => selection = TextSelection.fromPosition(
+        TextPosition(offset: newText.length),
+      ),
+    );
+  }
+
+  ///Defers [FlutterTagger]'s listener attached to this controller.
+  void _runDeferedAction(Function action) {
+    _deferCallback?.call();
+    action.call();
+  }
 
   ///Clears [FlutterTagger] internal tag state.
   @override
