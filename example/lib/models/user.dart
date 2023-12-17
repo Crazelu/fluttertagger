@@ -23,7 +23,7 @@ class User {
         id: "11a27531b866ce0016f9e582",
         fullName: "Brad Francis",
         userName: "brad",
-        avatar: "https://avatars.githubusercontent.com/u/45284758?v=4",
+        avatar: "https://picsum.photos/50",
       );
 
   factory User.sharky() => User(
