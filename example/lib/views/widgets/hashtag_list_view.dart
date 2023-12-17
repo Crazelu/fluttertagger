@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:example/models/user.dart';
 import 'package:example/views/view_models/search_view_model.dart';
 import 'package:example/views/widgets/loading_indicator.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 
-class UserListView extends StatelessWidget {
-  const UserListView({
+class HashtagListView extends StatelessWidget {
+  const HashtagListView({
     Key? key,
     required this.tagController,
     required this.animation,
@@ -40,53 +39,65 @@ class UserListView extends StatelessWidget {
           child: ValueListenableBuilder<bool>(
             valueListenable: searchViewModel.loading,
             builder: (_, loading, __) {
-              return ValueListenableBuilder<List<User>>(
-                valueListenable: searchViewModel.users,
-                builder: (_, users, __) {
+              return ValueListenableBuilder<List<String>>(
+                valueListenable: searchViewModel.hashtags,
+                builder: (_, hashtags, __) {
                   return Column(
                     children: [
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: IconButton(
-                          onPressed: tagController.dismissOverlay,
-                          icon: const Icon(Icons.close),
-                        ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          const Spacer(),
+                          Text(
+                            "Hashtags",
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: tagController.dismissOverlay,
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
                       ),
-                      if (loading && users.isEmpty) ...{
+                      if (loading && hashtags.isEmpty) ...{
                         const Center(
                           heightFactor: 16,
                           child: LoadingWidget(),
                         )
                       },
-                      if (!loading && users.isEmpty)
+                      if (!loading && hashtags.isEmpty)
                         const Center(
                           heightFactor: 16,
-                          child: Text("No user found"),
+                          child: Text("Didn't find anything!"),
                         ),
-                      if (users.isNotEmpty)
+                      if (hashtags.isNotEmpty)
                         Expanded(
                           child: ListView.builder(
                             padding: EdgeInsets.zero,
-                            itemCount: users.length,
+                            itemCount: hashtags.length,
                             itemBuilder: (_, index) {
-                              final user = users[index];
+                              final hashtag = hashtags[index];
                               return ListTile(
                                 leading: Container(
-                                  height: 50,
-                                  width: 50,
+                                  height: 40,
+                                  width: 40,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    image: DecorationImage(
-                                      image: NetworkImage(user.avatar),
-                                    ),
+                                    border: Border.all(
+                                        color: Colors.lightBlueAccent),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Text(
+                                    "#",
+                                    style: TextStyle(color: Colors.blueAccent),
                                   ),
                                 ),
-                                title: Text(user.fullName),
-                                subtitle: Text("@${user.userName}"),
+                                title: Text(hashtag),
                                 onTap: () {
                                   tagController.addTag(
-                                    id: user.id,
-                                    name: user.userName,
+                                    id: hashtag,
+                                    name: hashtag,
                                   );
                                 },
                               );

@@ -1,10 +1,10 @@
+import 'package:example/views/widgets/search_result_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:example/models/post.dart';
 import 'package:example/views/view_models/home_view_model.dart';
 import 'package:example/views/view_models/search_view_model.dart';
 import 'package:example/views/widgets/comment_text_field.dart';
 import 'package:example/views/widgets/post_widget.dart';
-import 'package:example/views/widgets/user_list_view.dart';
 import 'package:fluttertagger/fluttertagger.dart';
 
 void main() {
@@ -45,11 +45,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late final homeViewModel = HomeViewModel();
   late final _controller = FlutterTaggerController(
     //Initial text value with tag is formatted internally
-    //after FlutterTaggerControlleris constructed.
+    //following the construction of FlutterTaggerController.
     //After this controller is constructed, if you
     //wish to update its text value with raw tag string,
     //call (_controller.formatTags) after that.
-    text: "Hey @11a27531b866ce0016f9e582#brad#",
+    text:
+        "Hey @11a27531b866ce0016f9e582#brad#. It's time to #11a27531b866ce0016f9e582#Flutter#!",
   );
   late final _focusNode = FocusNode();
 
@@ -101,17 +102,28 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           title: const Text("The Squad"),
         ),
         bottomNavigationBar: FlutterTagger(
-          overlayHeight: overlayHeight,
-          animationController: _animationController,
-          tagStyle: const TextStyle(color: Colors.pink),
           controller: _controller,
-          onSearch: (query) {
-            searchViewModel.search(query);
-          },
-          overlay: UserListView(
+          overlay: SearchResultOverlay(
             animation: _animation,
             tagController: _controller,
           ),
+          onSearch: (query, triggerChar) {
+            if (triggerChar == "@") {
+              searchViewModel.searchUser(query);
+            }
+            if (triggerChar == "#") {
+              searchViewModel.searchHashtag(query);
+            }
+          },
+          overlayHeight: overlayHeight,
+          animationController: _animationController,
+          triggerCharacterAndStyles: const {
+            "@": TextStyle(color: Colors.pinkAccent),
+            "#": TextStyle(color: Colors.blueAccent),
+          },
+          tagTextFormatter: (id, tag, triggerCharacter) {
+            return "$triggerCharacter$id#$tag#";
+          },
           builder: (context, containerKey) {
             return CommentTextField(
               focusNode: _focusNode,

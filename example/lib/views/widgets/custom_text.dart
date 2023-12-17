@@ -110,6 +110,7 @@ class CustomText extends StatelessWidget {
       linkifiers: [
         const UrlLinkifier(),
         CustomUserTagLinkifier(),
+        HashtagLinkifier(),
       ],
     );
 
@@ -148,6 +149,21 @@ class CustomText extends StatelessWidget {
             recognizer: TapGestureRecognizer()
               ..onTap = () {
                 onUserTagPressed?.call(element.userId);
+              },
+          ),
+        );
+      } else if (element is HashtagElement) {
+        _addText(
+          TextSpan(
+            text: element.title,
+            style: TextStyle(
+              fontWeight: FontWeight.w400,
+              fontSize: _fontSize,
+              color: Colors.blueAccent,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                onUserTagPressed?.call(element.title);
               },
           ),
         );
@@ -256,7 +272,7 @@ class CustomUserTagElement extends LinkableElement {
 
   @override
   String toString() {
-    return "CustomUserTagElement: '$userId' ($name)";
+    return "CustomUserTagElement(userId: '$userId', name: $name)";
   }
 
   @override
@@ -271,4 +287,70 @@ class CustomUserTagElement extends LinkableElement {
       super.equals(other) &&
       other.userId == userId &&
       other.name == name;
+}
+
+class HashtagLinkifier extends Linkifier {
+  ///This matches any string in this format
+  ///"#{id}#{hashtagTitle}#"
+  final _userTagRegex = RegExp(r'^(.*?)(\#.\w+\#..+?\#)');
+  @override
+  List<LinkifyElement> parse(
+    List<LinkifyElement> elements,
+    LinkifyOptions options,
+  ) {
+    final list = <LinkifyElement>[];
+
+    for (var element in elements) {
+      if (element is TextElement) {
+        final match = _userTagRegex.firstMatch(element.text);
+
+        if (match == null) {
+          list.add(element);
+        } else {
+          final text = element.text.replaceFirst(match.group(0)!, '');
+
+          if (match.group(1)?.isNotEmpty == true) {
+            list.add(TextElement(match.group(1)!));
+          }
+
+          if (match.group(2)?.isNotEmpty == true) {
+            final blob = match.group(2)!.split("#");
+            list.add(
+              HashtagElement(
+                title: "#${blob[blob.length - 2]}",
+              ),
+            );
+          }
+
+          if (text.isNotEmpty) {
+            list.addAll(parse([TextElement(text)], options));
+          }
+        }
+      } else {
+        list.add(element);
+      }
+    }
+
+    return list;
+  }
+}
+
+class HashtagElement extends LinkableElement {
+  final String title;
+  HashtagElement({required this.title}) : super(title, title);
+
+  @override
+  String toString() {
+    return "HashtagElement(title: '$title')";
+  }
+
+  @override
+  bool operator ==(other) => equals(other);
+
+  @override
+  int get hashCode => Object.hashAll([title]);
+
+  @override
+  bool equals(other) =>
+      other is HashtagElement && super.equals(other) && other.title == title;
 }
