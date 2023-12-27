@@ -214,8 +214,8 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   ///This is quite useful for doing a precise position-based tag search.
   late Trie _tagTrie;
 
-  ///Table of tagged texts and their ids
-  late final Map<TaggedText, String> _tagTable = {};
+  ///Map of tagged texts and their ids
+  late final Map<TaggedText, String> _tags = {};
 
   Iterable<String> get triggerCharacters =>
       widget.triggerCharacterAndStyles.keys;
@@ -246,13 +246,23 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     final nestedWords = text.splitWithDelim(_triggerCharactersPattern);
     bool startsWithTrigger =
         triggerCharacters.contains(text[0]) && nestedWords.first.isNotEmpty;
+
     String triggerChar = "";
+    int triggerCharIndex = 0;
 
     for (int i = 0; i < nestedWords.length; i++) {
       final nestedWord = nestedWords[i];
 
       if (nestedWord.contains(_triggerCharactersPattern)) {
+        if (triggerChar.isNotEmpty && triggerCharIndex == i - 2) {
+          result.add(triggerChar);
+          start += triggerChar.length;
+          triggerChar = "";
+          triggerCharIndex = i;
+          continue;
+        }
         triggerChar = nestedWord;
+        triggerCharIndex = i;
         continue;
       }
 
@@ -275,7 +285,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
         String suffix = word.substring(taggedText.text.length);
         String formattedTagText = taggedText.text.replaceAll(triggerChar, "");
         formattedTagText = _formatTagText(
-          _tagTable[taggedText]!,
+          _tags[taggedText]!,
           formattedTagText,
           triggerChar,
         );
@@ -287,6 +297,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       }
 
       start += word.length;
+      triggerChar = "";
     }
 
     return result.join("");
@@ -333,7 +344,6 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     }
 
     final resultString = result.join(" ");
-
     return resultString;
   }
 
@@ -343,7 +353,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   ///Current tag selected in TextField.
   TaggedText? _selectedTag;
 
-  ///Adds [tag] and [id] to [_tagTable] and
+  ///Adds [tag] and [id] to [_tags] and
   ///updates TextField value with [tag].
   void _addTag(String id, String tag) {
     _shouldSearch = false;
@@ -391,7 +401,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
         endIndex: offset,
         text: tag,
       );
-      _tagTable[taggedText] = id;
+      _tags[taggedText] = id;
       _tagTrie.insert(taggedText);
 
       controller.selection = TextSelection.fromPosition(
@@ -410,7 +420,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     }
   }
 
-  ///Selects a tag from [_tagTable] when keyboard action attempts to remove it
+  ///Selects a tag from [_tags] when keyboard action attempts to remove it
   ///so as to prompt the user.
   ///
   ///The selected tag is removed from the TextField
@@ -430,7 +440,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
         return true;
       }
       if (text.isEmpty) {
-        _tagTable.clear();
+        _tags.clear();
         _tagTrie.clear();
         _lastCachedText = text;
         return false;
@@ -441,7 +451,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
         return false;
       }
 
-      for (var tag in _tagTable.keys) {
+      for (var tag in _tags.keys) {
         if (tag.endIndex - 1 == position + 1) {
           if (!_isTagSelected) {
             if (_backtrackAndSelect(tag)) return true;
@@ -511,9 +521,9 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   ///Updates offsets after [_selectedTag] set in [_backtrackAndSelect]
   ///has been removed.
   void _removeSelection() {
-    _tagTable.remove(_selectedTag);
+    _tags.remove(_selectedTag);
     _tagTrie.clear();
-    _tagTrie.insertAll(_tagTable.keys);
+    _tagTrie.insertAll(_tags.keys);
     _selectedTag = null;
     final oldCachedText = _lastCachedText;
     _lastCachedText = controller.text;
@@ -601,7 +611,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       }
 
       if (triggerCharacters.contains(text[i])) {
-        final doesTagExistInRange = _tagTable.keys.any(
+        final doesTagExistInRange = _tags.keys.any(
           (tag) => tag.startIndex == i && tag.endIndex == length + 1,
         );
 
@@ -736,7 +746,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       Map<TaggedText, String> newTable = {};
       _tagTrie.clear();
 
-      for (var tag in _tagTable.keys) {
+      for (var tag in _tags.keys) {
         if (tag.startIndex >= position) {
           final newTag = TaggedText(
             startIndex:
@@ -746,15 +756,15 @@ class _FlutterTaggerState extends State<FlutterTagger> {
           );
 
           _tagTrie.insert(newTag);
-          newTable[newTag] = _tagTable[tag]!;
+          newTable[newTag] = _tags[tag]!;
         } else {
           _tagTrie.insert(tag);
-          newTable[tag] = _tagTable[tag]!;
+          newTable[tag] = _tags[tag]!;
         }
       }
 
-      _tagTable.clear();
-      _tagTable.addAll(newTable);
+      _tags.clear();
+      _tags.addAll(newTable);
     }
   }
 
@@ -784,12 +794,12 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     super.initState();
     _tagTrie = controller._trie;
     controller._setDeferCallback(() => _defer = true);
-    controller._setTagTable(_tagTable);
+    controller._setTags(_tags);
     controller._setTriggerCharactersRegExpPattern(_triggerCharactersPattern);
     controller._setTagStyles(widget.triggerCharacterAndStyles);
     controller.addListener(_tagListener);
     controller._onClear(() {
-      _tagTable.clear();
+      _tags.clear();
       _tagTrie.clear();
     });
     controller._onDismissOverlay(() {
@@ -822,12 +832,12 @@ class FlutterTaggerController extends TextEditingController {
   FlutterTaggerController({String? text}) : super(text: text);
 
   late final Trie _trie = Trie();
-  late Map<TaggedText, String> _tagTable;
+  late Map<TaggedText, String> _tags;
 
-  late Map<String, TextStyle> _tagStyleTable;
+  late Map<String, TextStyle> _tagStyles;
 
-  void _setTagStyles(Map<String, TextStyle> tagStyleTable) {
-    _tagStyleTable = tagStyleTable;
+  void _setTagStyles(Map<String, TextStyle> tagStyles) {
+    _tagStyles = tagStyles;
   }
 
   RegExp? _triggerCharsPattern;
@@ -840,8 +850,8 @@ class FlutterTaggerController extends TextEditingController {
     _formatTagsCallback?.call();
   }
 
-  void _setTagTable(Map<TaggedText, String> table) {
-    _tagTable = table;
+  void _setTags(Map<TaggedText, String> tags) {
+    _tags = tags;
   }
 
   void _setDeferCallback(Function callback) {
@@ -928,7 +938,7 @@ class FlutterTaggerController extends TextEditingController {
           endIndex: endIndex - diff,
           text: tag,
         );
-        _tagTable[taggedText] = idAndTag.first;
+        _tags[taggedText] = idAndTag.first;
         _trie.insert(taggedText);
 
         diff += matchValue.length - tag.length;
@@ -1005,7 +1015,7 @@ class FlutterTaggerController extends TextEditingController {
     return _buildTextSpan(style);
   }
 
-  ///Parses [text] and styles nested tagged texts using style from [_tagStyleTable].
+  ///Parses [text] and styles nested tagged texts using style from [_tagStyles].
   List<TextSpan> _getNestedSpans(String text, int startIndex) {
     if (text.isEmpty) return [];
 
@@ -1056,7 +1066,7 @@ class FlutterTaggerController extends TextEditingController {
         spans.add(
           TextSpan(
             text: taggedText.text,
-            style: _tagStyleTable[triggerChar],
+            style: _tagStyles[triggerChar],
           ),
         );
         if (suffix.isNotEmpty) spans.add(TextSpan(text: suffix));
@@ -1071,7 +1081,7 @@ class FlutterTaggerController extends TextEditingController {
     return spans;
   }
 
-  ///Builds text value with tagged texts styled using styles from [_tagStyleTable].
+  ///Builds text value with tagged texts styled using styles from [_tagStyles].
   TextSpan _buildTextSpan(TextStyle? style) {
     if (text.isEmpty) return const TextSpan();
 
