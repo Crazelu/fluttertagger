@@ -103,10 +103,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         ),
         bottomNavigationBar: FlutterTagger(
           controller: _controller,
-          overlay: SearchResultOverlay(
-            animation: _animation,
-            tagController: _controller,
-          ),
+          animationController: _animationController,
           onSearch: (query, triggerChar) {
             if (triggerChar == "@") {
               searchViewModel.searchUser(query);
@@ -115,8 +112,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               searchViewModel.searchHashtag(query);
             }
           },
-          overlayHeight: overlayHeight,
-          animationController: _animationController,
           triggerCharacterAndStyles: const {
             "@": TextStyle(color: Colors.pinkAccent),
             "#": TextStyle(color: Colors.blueAccent),
@@ -124,6 +119,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           tagTextFormatter: (id, tag, triggerCharacter) {
             return "$triggerCharacter$id#$tag#";
           },
+          overlayHeight: overlayHeight,
+          overlay: SearchResultOverlay(
+            animation: _animation,
+            tagController: _controller,
+          ),
           builder: (context, containerKey) {
             return CommentTextField(
               focusNode: _focusNode,

@@ -217,7 +217,7 @@ class CustomText extends StatelessWidget {
 class CustomUserTagLinkifier extends Linkifier {
   ///This matches any string in this format
   ///"@{userId}#{userName}#"
-  final _userTagRegex = RegExp(r'^(.*?)(\@.\w+\#..+?\#)');
+  final _userTagRegex = RegExp(r'^(.*?)(\@\w+\#..+?\#)');
   @override
   List<LinkifyElement> parse(
     List<LinkifyElement> elements,
@@ -292,7 +292,7 @@ class CustomUserTagElement extends LinkableElement {
 class HashtagLinkifier extends Linkifier {
   ///This matches any string in this format
   ///"#{id}#{hashtagTitle}#"
-  final _userTagRegex = RegExp(r'^(.*?)(\#.\w+\#..+?\#)');
+  final _userTagRegex = RegExp(r'^(.*?)(\#\w+\#..+?\#)');
   @override
   List<LinkifyElement> parse(
     List<LinkifyElement> elements,

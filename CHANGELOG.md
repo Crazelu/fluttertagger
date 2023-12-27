@@ -22,3 +22,10 @@
 
 * Adds support for formatting tags in FlutterTaggerController's text value set directly using the `text` setter. 
 * Exposes a `formatTags` method for this purpose.
+
+## 2.0.0
+
+* Adds support for multiple kinds of tags associated with any single FlutterTaggerController.
+* Adds improvement to logic which re-activates the search context from backtracking.
+* Updates documentation and example project.
+
