@@ -45,7 +45,6 @@ class FlutterTagger extends StatefulWidget {
     required this.builder,
     this.padding = EdgeInsets.zero,
     this.overlayHeight = 380,
-    this.triggerCharacter = "@",
     this.triggerCharacterAndStyles = const {},
     this.onFormattedTextChanged,
     this.searchRegex,
@@ -107,11 +106,9 @@ class FlutterTagger extends StatefulWidget {
 
   ///Regex to match allowed trigger characters.
   ///Trigger characters activate the search context.
+  ///If null, a Regex pattern is constructed from the
+  ///trigger characters in [triggerCharacterAndStyles].
   final RegExp? triggerCharactersRegex;
-
-  ///Character that initiates the search context.
-  ///E.g, "@" to mention users or "#" for hashtags.
-  final String triggerCharacter;
 
   ///Controller for the [overlay]'s animation.
   final AnimationController? animationController;
@@ -554,7 +551,8 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   ///Regex to match allowed search characters.
   ///Non-conforming characters terminate the search context.
   /// {@endtemplate}
-  late final _regExp = widget.searchRegex ?? RegExp(r'^[a-zA-Z-]*$');
+  late final _searchRegexPattern =
+      widget.searchRegex ?? RegExp(r'^[a-zA-Z-]*$');
 
   int _lastCursorPosition = 0;
   bool _isBacktrackingToSearch = false;
@@ -592,17 +590,16 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     String text = controller.text;
     if (!text.contains(_triggerCharactersPattern)) return false;
 
+    _lastCachedText = text;
     final length = controller.selection.base.offset - 1;
-
-    late String temp = "";
 
     for (int i = length; i >= 0; i--) {
       if ((i == length && triggerCharacters.contains(text[i])) ||
-          !triggerCharacters.contains(text[i]) && !_regExp.hasMatch(text[i])) {
+          !triggerCharacters.contains(text[i]) &&
+              !_searchRegexPattern.hasMatch(text[i])) {
         return false;
       }
 
-      temp = text[i] + temp;
       if (triggerCharacters.contains(text[i])) {
         final doesTagExistInRange = _tagTable.keys.any(
           (tag) => tag.startIndex == i && tag.endIndex == length + 1,
@@ -622,7 +619,6 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       }
     }
 
-    _lastCachedText = text;
     _isBacktrackingToSearch = false;
     return false;
   }
@@ -635,7 +631,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   ///
   ///Ends Search:
   ///Exits search context and hides overlay when a terminating character
-  ///not matched by [_regExp] is entered.
+  ///not matched by [_searchRegexPattern] is entered.
   void _tagListener() {
     final currentCursorPosition = controller.selection.baseOffset;
     final text = controller.text;
@@ -674,24 +670,25 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     final oldCachedText = _lastCachedText;
 
     if (_shouldSearch && position >= 0) {
-      if (!_regExp.hasMatch(text[position])) {
+      if (!_searchRegexPattern.hasMatch(text[position])) {
         _shouldSearch = false;
         _shouldHideOverlay(true);
       } else {
         _extractAndSearch(text, position);
-        _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
+        _recomputeTags(oldCachedText, text, position);
         _lastCachedText = text;
         return;
       }
     }
 
     if (_lastCachedText == text) {
-      _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
+      _recomputeTags(oldCachedText, text, position);
       _onFormattedTextChanged();
       return;
     }
 
-    if (_lastCachedText.trim().length > text.trim().length) {
+    if (_lastCachedText.length > text.length ||
+        currentCursorPosition < text.length) {
       if (_removeEditedTags()) {
         _shouldHideOverlay(true);
         _onFormattedTextChanged();
@@ -700,9 +697,12 @@ class _FlutterTaggerState extends State<FlutterTagger> {
 
       final hideOverlay = !_backtrackAndSearch();
       if (hideOverlay) _shouldHideOverlay(true);
-      _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
-      _onFormattedTextChanged();
-      return;
+
+      if (position < 0 || !triggerCharacters.contains(text[position])) {
+        _recomputeTags(oldCachedText, text, position);
+        _onFormattedTextChanged();
+        return;
+      }
     }
 
     _lastCachedText = text;
@@ -710,12 +710,12 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     if (position >= 0 && triggerCharacters.contains(text[position])) {
       _shouldSearch = true;
       _currentTriggerChar = text[position];
-      _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
+      _recomputeTags(oldCachedText, text, position);
       _onFormattedTextChanged();
       return;
     }
 
-    if (position >= 0 && !_regExp.hasMatch(text[position])) {
+    if (position >= 0 && !_searchRegexPattern.hasMatch(text[position])) {
       _shouldSearch = false;
     }
 
@@ -725,8 +725,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       _shouldHideOverlay(true);
     }
 
-    _recomputeTags(oldCachedText, text, currentCursorPosition - 1);
-
+    _recomputeTags(oldCachedText, text, position);
     _onFormattedTextChanged();
   }
 
@@ -1006,7 +1005,7 @@ class FlutterTaggerController extends TextEditingController {
     return _buildTextSpan(style);
   }
 
-  ///Parses [text] and styles nested tagged texts using [_tagStyle].
+  ///Parses [text] and styles nested tagged texts using style from [_tagStyleTable].
   List<TextSpan> _getNestedSpans(String text, int startIndex) {
     if (text.isEmpty) return [];
 
@@ -1018,12 +1017,21 @@ class FlutterTaggerController extends TextEditingController {
         nestedWords.first.isNotEmpty;
 
     String triggerChar = "";
+    int triggerCharIndex = 0;
 
     for (int i = 0; i < nestedWords.length; i++) {
       final nestedWord = nestedWords[i];
 
       if (nestedWord.contains(_triggerCharactersPattern)) {
+        if (triggerChar.isNotEmpty && triggerCharIndex == i - 2) {
+          spans.add(TextSpan(text: triggerChar));
+          start += triggerChar.length;
+          triggerChar = "";
+          triggerCharIndex = i;
+          continue;
+        }
         triggerChar = nestedWord;
+        triggerCharIndex = i;
         continue;
       }
 
