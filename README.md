@@ -18,7 +18,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 
 ```yaml
 dependencies:
-  fluttertagger: ^1.0.0+6
+  fluttertagger: ^2.0.0
 ```
 
 ## Import the package in your project 📥
@@ -32,8 +32,14 @@ import 'package:fluttertagger/fluttertagger.dart';
 ```dart
 FlutterTagger(
           controller: flutterTaggerController,
-          onSearch: (query) {
+          onSearch: (query, triggerCharacter) {
               //perform search
+          },
+          //characters that can trigger a search and the styles
+          //to be applied to their tagged results in the TextField
+          triggerCharacterAndStyles: const {
+            "@": TextStyle(color: Colors.pinkAccent),
+            "#": TextStyle(color: Colors.blueAccent),
           },
           overlay: SearchResultView(),
           builder: (context, containerKey) {

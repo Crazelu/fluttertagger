@@ -901,7 +901,7 @@ class FlutterTaggerController extends TextEditingController {
     _text = text;
     String newText = text;
 
-    pattern ??= RegExp(r'([@#].+?\#.+?\#)');
+    pattern ??= RegExp(r'([@#]\w+\#.+?\#)');
     parser ??= (value) {
       final split = value.split("#");
       if (split.length == 4) {
