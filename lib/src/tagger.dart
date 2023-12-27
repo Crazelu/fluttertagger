@@ -895,6 +895,11 @@ class FlutterTaggerController extends TextEditingController {
     pattern ??= RegExp(r'([@#].+?\#.+?\#)');
     parser ??= (value) {
       final split = value.split("#");
+      if (split.length == 4) {
+        //default hashtag group match (tag and id)
+        return [split[1].trim(), split[2].trim()];
+      }
+      //default user mention group match (name and id)
       return [split.first.trim(), split[split.length - 2].trim()];
     };
 
