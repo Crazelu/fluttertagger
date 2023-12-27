@@ -344,6 +344,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     }
 
     final resultString = result.join(" ");
+
     return resultString;
   }
 
@@ -909,7 +910,8 @@ class FlutterTaggerController extends TextEditingController {
         return [split[1].trim(), split[2].trim()];
       }
       //default user mention group match (name and id)
-      return [split.first.trim(), split[split.length - 2].trim()];
+      final id = split.first.trim().replaceFirst("@", "");
+      return [id, split[split.length - 2].trim()];
     };
 
     final matches = pattern.allMatches(text);
