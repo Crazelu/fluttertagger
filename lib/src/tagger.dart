@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fluttertagger/src/tagged_text.dart';
 import 'package:fluttertagger/src/trie.dart';
 
+typedef UrlListCallback = void Function(List<String>);
+
+// TODO: make tags clearing optional, make url search better (dynamic), add dynamic styling for url
 ///{@macro builder}
 typedef FlutterTaggerWidgetBuilder = Widget Function(
   BuildContext context,
@@ -43,6 +46,7 @@ class FlutterTagger extends StatefulWidget {
     required this.controller,
     required this.onSearch,
     required this.builder,
+    this.clearTagsOnInit = false,
     this.padding = EdgeInsets.zero,
     this.overlayHeight = 380,
     this.triggerCharacterAndStyles = const {},
@@ -51,6 +55,8 @@ class FlutterTagger extends StatefulWidget {
     this.triggerCharactersRegex,
     this.tagTextFormatter,
     this.animationController,
+    this.onUrlsFound,
+    this.urlRegex,
   })  : assert(
           triggerCharacterAndStyles != const {},
           "triggerCharacterAndStyles cannot be empty",
@@ -83,6 +89,10 @@ class FlutterTagger extends StatefulWidget {
 
   /// {@macro flutterTaggerController}
   final FlutterTaggerController controller;
+  // callback to show url that matched urlRegex
+  final  UrlListCallback? onUrlsFound;
+  // custom url regex
+  final RegExp? urlRegex;
 
   ///Callback to dispatch updated formatted text.
   final void Function(String)? onFormattedTextChanged;
@@ -92,6 +102,9 @@ class FlutterTagger extends StatefulWidget {
   ///enters the search context.
   ////// {@endtemplate}
   final FlutterTaggerSearchCallback onSearch;
+
+  // Keeps the tags inside controller, even after reinicialization of the FlutterTagger
+  final bool clearTagsOnInit;
 
   ///{@template builder}
   ///Widget builder for [FlutterTagger]'s associated TextField.
@@ -200,13 +213,22 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   ///Creates an overlay to show search result
   OverlayEntry _createOverlay() {
     return OverlayEntry(
-      builder: (_) => Positioned(
-        left: _offset.dx,
-        width: _width,
-        height: widget.overlayHeight,
-        top: _offset.dy - (widget.overlayHeight + widget.padding.vertical),
-        child: widget.overlay,
+      builder: (_) =>   Stack(
+        children: [
+         GestureDetector(
+        onTap: (){_shouldHideOverlay(true);},
+        child:  Container(color: Colors.transparent,),),
+          Positioned(
+                left: _offset.dx,
+                width: _width,
+                height: widget.overlayHeight,
+                top: _offset.dy - (widget.overlayHeight + widget.padding.vertical),
+                child: widget.overlay,
+              ),
+        ],
       ),
+        
+      
     );
   }
 
@@ -215,7 +237,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   late Trie _tagTrie;
 
   ///Map of tagged texts and their ids
-  late final Map<TaggedText, String> _tags = {};
+  late  Map<TaggedText, String> _tags = {};
 
   Iterable<String> get triggerCharacters =>
       widget.triggerCharacterAndStyles.keys;
@@ -565,6 +587,11 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   late final _searchRegexPattern =
       widget.searchRegex ?? RegExp(r'^[a-zA-Z-]*$');
 
+   late final _urlRegexPattern =
+      widget.urlRegex ?? RegExp(
+  r'(((((http:\/\/)?www\.)|((https:\/\/)?www\.)|(http:\/\/)|(https:\/\/))?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,63}(\/[-a-zA-Z0-9()@:%_\+,.~#?\-$&\/=]*)?)|(youtu.be\/[-a-zA-Z0-9()@:%_\+,.~#?\-$&\/=]*))',
+);
+
   int _lastCursorPosition = 0;
   bool _isBacktrackingToSearch = false;
 
@@ -612,11 +639,11 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       }
 
       if (triggerCharacters.contains(text[i])) {
-        final doesTagExistInRange = _tags.keys.any(
-          (tag) => tag.startIndex == i && tag.endIndex == length + 1,
-        );
-
-        if (doesTagExistInRange) return false;
+ // let the search appear only ift here is trigger char, but no tag
+     final doesTagEncloseRange = !_tags.keys.any(
+        (tag)  => tag.startIndex <= i && tag.endIndex > length
+      );
+        if (!doesTagEncloseRange) return false;
 
         _currentTriggerChar = text[i];
         _shouldSearch = true;
@@ -795,19 +822,28 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     super.initState();
     _tagTrie = controller._trie;
     controller._setDeferCallback(() => _defer = true);
-    controller._setTags(_tags);
+    if(!widget.clearTagsOnInit){
+    _tags = controller._tags;
+    }else{
+      controller._setTags(_tags);
+    }
+    
     controller._setTriggerCharactersRegExpPattern(_triggerCharactersPattern);
     controller._setTagStyles(widget.triggerCharacterAndStyles);
+    controller._onUrlsFound = widget.onUrlsFound;
+    controller._urlSearchRegex = _urlRegexPattern;
     controller.addListener(_tagListener);
-    controller._onClear(() {
-      _tags.clear();
-      _tagTrie.clear();
-    });
+    controller._onClear(clearCallback);
     controller._onDismissOverlay(() {
       _shouldHideOverlay(true);
     });
     controller._registerAddTagCallback(_addTag);
     widget.animationController?.addListener(_animationControllerListener);
+  }
+
+  void clearCallback(){
+      _tags.clear();
+      _tagTrie.clear();
   }
 
   @override
@@ -833,14 +869,16 @@ class FlutterTaggerController extends TextEditingController {
   FlutterTaggerController({String? text}) : super(text: text);
 
   late final Trie _trie = Trie();
-  late Map<TaggedText, String> _tags;
-
+   Map<TaggedText, String> _tags = {};
+  Map<TaggedText, String> get tags => _tags;
   late Map<String, TextStyle> _tagStyles;
 
   void _setTagStyles(Map<String, TextStyle> tagStyles) {
     _tagStyles = tagStyles;
   }
-
+  // TODO: make more reusable
+  UrlListCallback? _onUrlsFound;
+  RegExp? _urlSearchRegex;
   RegExp? _triggerCharsPattern;
 
   RegExp get _triggerCharactersPattern => _triggerCharsPattern!;
@@ -898,7 +936,6 @@ class FlutterTaggerController extends TextEditingController {
     RegExp? pattern,
     List<String> Function(String)? parser,
   ]) {
-    _clearCallback?.call();
     _text = text;
     String newText = text;
 
@@ -1033,6 +1070,16 @@ class FlutterTaggerController extends TextEditingController {
 
     for (int i = 0; i < nestedWords.length; i++) {
       final nestedWord = nestedWords[i];
+// TODO: make own style for url
+       if (_urlSearchRegex!.hasMatch(nestedWord) ) {
+      // If the text is a URL, apply underline style
+        spans.add(TextSpan(
+          text: nestedWord,
+          style: _tagStyles['@'],
+        ),);
+        continue;
+      }
+    else
 
       if (nestedWord.contains(_triggerCharactersPattern)) {
         if (triggerChar.isNotEmpty && triggerCharIndex == i - 2) {
@@ -1092,12 +1139,18 @@ class FlutterTaggerController extends TextEditingController {
     List<TextSpan> spans = [];
     int start = 0;
     int end = splitText.first.length;
-
+  List<String> foundUrls = [];
     for (int i = 0; i < splitText.length; i++) {
       final currentText = splitText[i];
-
-      if (currentText.contains(_triggerCharactersPattern)) {
+    
+  if (currentText.contains(_triggerCharactersPattern) || _urlSearchRegex!.hasMatch(currentText)) {
+    if(!foundUrls.contains(currentText) &&  _urlSearchRegex!.hasMatch(currentText)){
+  
+       foundUrls.add(currentText);    
+     
+       }
         final nestedSpans = _getNestedSpans(currentText, start);
+    
         spans.addAll(nestedSpans);
         spans.add(const TextSpan(text: " "));
 
@@ -1112,7 +1165,14 @@ class FlutterTaggerController extends TextEditingController {
         }
         spans.add(TextSpan(text: "$currentText "));
       }
+      
+  
     }
+
+   
+      _onUrlsFound?.call(foundUrls);
+  
+      
     return TextSpan(children: spans, style: style);
   }
 }
