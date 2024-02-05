@@ -38,9 +38,9 @@ typedef FlutterTaggerSearchCallback = void Function(
 ///for formatting of the tags in [TextField]'s text value with [tagTextFormatter].
 ///
 ///Tags in the [TextField] are styled with [tagStyle].
-class FlutterTagger extends StatefulWidget {
+class FlutterTaggers extends StatefulWidget {
   ///Creates an instance of [FlutterTagger]
-  const FlutterTagger({
+  const FlutterTaggers({
     Key? key,
     required this.overlay,
     required this.controller,
@@ -48,7 +48,6 @@ class FlutterTagger extends StatefulWidget {
     required this.builder,
     this.clearTagsOnInit = false,
     this.padding = EdgeInsets.zero,
-    this.overlayHeight = 380,
     this.triggerCharacterAndStyles = const {},
     this.onFormattedTextChanged,
     this.searchRegex,
@@ -69,8 +68,6 @@ class FlutterTagger extends StatefulWidget {
   ///Padding applied to [overlay].
   final EdgeInsetsGeometry padding;
 
-  ///[overlay]'s height.
-  final double overlayHeight;
 
   ///Formats and replaces tags for raw text retrieval.
   ///By default, tags are replaced in this format:
@@ -88,7 +85,7 @@ class FlutterTagger extends StatefulWidget {
   final TagTextFormatter? tagTextFormatter;
 
   /// {@macro flutterTaggerController}
-  final FlutterTaggerController controller;
+  final FlutterTaggerControllers controller;
   // callback to show url that matched urlRegex
   final  UrlListCallback? onUrlsFound;
   // custom url regex
@@ -132,11 +129,11 @@ class FlutterTagger extends StatefulWidget {
   final Map<String, TextStyle> triggerCharacterAndStyles;
 
   @override
-  State<FlutterTagger> createState() => _FlutterTaggerState();
+  State<FlutterTaggers> createState() => _FlutterTaggerState();
 }
 
-class _FlutterTaggerState extends State<FlutterTagger> {
-  FlutterTaggerController get controller => widget.controller;
+class _FlutterTaggerState extends State<FlutterTaggers> {
+  FlutterTaggerControllers get controller => widget.controller;
 
   late final _parentContainerKey = GlobalKey(
     debugLabel: "FlutterTagger's child TextField Container key",
@@ -221,8 +218,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
           Positioned(
                 left: _offset.dx,
                 width: _width,
-                height: widget.overlayHeight,
-                top: _offset.dy - (widget.overlayHeight + widget.padding.vertical),
+                top: _offset.dy,
                 child: widget.overlay,
               ),
         ],
@@ -865,8 +861,8 @@ class _FlutterTaggerState extends State<FlutterTagger> {
 ///This object exposes callback registration bindings to enable clearing
 ///[FlutterTagger]'s tags, dismissing overlay and retrieving formatted text.
 /// {@endtemplate}
-class FlutterTaggerController extends TextEditingController {
-  FlutterTaggerController({String? text}) : super(text: text);
+class FlutterTaggerControllers extends TextEditingController {
+  FlutterTaggerControllers({String? text}) : super(text: text);
 
   late final Trie _trie = Trie();
    Map<TaggedText, String> _tags = {};
