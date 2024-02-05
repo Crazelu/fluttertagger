@@ -38,9 +38,9 @@ typedef FlutterTaggerSearchCallback = void Function(
 ///for formatting of the tags in [TextField]'s text value with [tagTextFormatter].
 ///
 ///Tags in the [TextField] are styled with [tagStyle].
-class FlutterTaggers extends StatefulWidget {
+class FlutterTagger extends StatefulWidget {
   ///Creates an instance of [FlutterTagger]
-  const FlutterTaggers({
+  const FlutterTagger({
     Key? key,
     required this.overlay,
     required this.controller,
@@ -85,7 +85,7 @@ class FlutterTaggers extends StatefulWidget {
   final TagTextFormatter? tagTextFormatter;
 
   /// {@macro flutterTaggerController}
-  final FlutterTaggerControllers controller;
+  final FlutterTaggerController controller;
   // callback to show url that matched urlRegex
   final  UrlListCallback? onUrlsFound;
   // custom url regex
@@ -129,11 +129,11 @@ class FlutterTaggers extends StatefulWidget {
   final Map<String, TextStyle> triggerCharacterAndStyles;
 
   @override
-  State<FlutterTaggers> createState() => _FlutterTaggerState();
+  State<FlutterTagger> createState() => _FlutterTaggerState();
 }
 
-class _FlutterTaggerState extends State<FlutterTaggers> {
-  FlutterTaggerControllers get controller => widget.controller;
+class _FlutterTaggerState extends State<FlutterTagger> {
+  FlutterTaggerController get controller => widget.controller;
 
   late final _parentContainerKey = GlobalKey(
     debugLabel: "FlutterTagger's child TextField Container key",
@@ -861,8 +861,8 @@ class _FlutterTaggerState extends State<FlutterTaggers> {
 ///This object exposes callback registration bindings to enable clearing
 ///[FlutterTagger]'s tags, dismissing overlay and retrieving formatted text.
 /// {@endtemplate}
-class FlutterTaggerControllers extends TextEditingController {
-  FlutterTaggerControllers({String? text}) : super(text: text);
+class FlutterTaggerController extends TextEditingController {
+  FlutterTaggerController({String? text}) : super(text: text);
 
   late final Trie _trie = Trie();
    Map<TaggedText, String> _tags = {};
