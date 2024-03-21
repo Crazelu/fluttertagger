@@ -382,7 +382,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     id = id.trim();
 
     final text = controller.text;
-    late final position = controller.selection.base.offset;
+    late final position = controller.selection.base.offset - 1;
     int index = 0;
     int selectionOffset = 0;
 
@@ -1074,7 +1074,7 @@ class FlutterTaggerController extends TextEditingController {
           style: _tagStyles['@'],
         ),);
         continue;
-      }
+      }  
     else
 
       if (nestedWord.contains(_triggerCharactersPattern)) {
@@ -1149,7 +1149,8 @@ class FlutterTaggerController extends TextEditingController {
     
         spans.addAll(nestedSpans);
         if(splitText.indexOf(currentText) != splitText.length - 1){
-        spans.add(const TextSpan(text: " "));}
+        spans.add(const TextSpan(text: " "));
+        }
 
         start = end + 1;
         if (i + 1 < splitText.length) {
@@ -1161,9 +1162,10 @@ class FlutterTaggerController extends TextEditingController {
           end = start + splitText[i + 1].length;
         }
         
-        spans.add(TextSpan(text: currentText ));
+        spans.add(TextSpan(text: currentText));
          if(splitText.indexOf(currentText) != splitText.length - 1){
-        spans.add(const TextSpan(text: " "));}
+        spans.add(const TextSpan(text: ' '));
+        }
 
       }
       
