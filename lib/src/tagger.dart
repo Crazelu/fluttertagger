@@ -146,7 +146,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   late final OverlayState _overlayState = Overlay.of(context);
 
   ///Formats tag text to include id
-  String _formatTagText(String id, String tag, String triggerCharacter) {
+  String _formatTagText(String id,  String tag, String triggerCharacter) {
     return widget.tagTextFormatter?.call(id, tag, triggerCharacter) ??
         "@$id#$tag#";
   }
@@ -382,7 +382,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     id = id.trim();
 
     final text = controller.text;
-    late final position = controller.selection.base.offset - 1;
+    late final position = controller.selection.base.offset;
     int index = 0;
     int selectionOffset = 0;
 
@@ -1148,7 +1148,8 @@ class FlutterTaggerController extends TextEditingController {
         final nestedSpans = _getNestedSpans(currentText, start);
     
         spans.addAll(nestedSpans);
-        spans.add(const TextSpan(text: " "));
+        if(splitText.indexOf(currentText) != splitText.length - 1){
+        spans.add(const TextSpan(text: " "));}
 
         start = end + 1;
         if (i + 1 < splitText.length) {
@@ -1159,7 +1160,11 @@ class FlutterTaggerController extends TextEditingController {
         if (i + 1 < splitText.length) {
           end = start + splitText[i + 1].length;
         }
-        spans.add(TextSpan(text: "$currentText "));
+        
+        spans.add(TextSpan(text: currentText ));
+         if(splitText.indexOf(currentText) != splitText.length - 1){
+        spans.add(const TextSpan(text: " "));}
+
       }
       
   
