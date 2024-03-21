@@ -1148,7 +1148,7 @@ class FlutterTaggerController extends TextEditingController {
         final nestedSpans = _getNestedSpans(currentText, start);
     
         spans.addAll(nestedSpans);
-        if(splitText.indexOf(currentText) != splitText.length - 1){
+      if (i != splitText.length - 1) {
         spans.add(const TextSpan(text: " "));
         }
 
@@ -1163,7 +1163,7 @@ class FlutterTaggerController extends TextEditingController {
         }
         
         spans.add(TextSpan(text: currentText));
-         if(splitText.indexOf(currentText) != splitText.length - 1){
+        if (i != splitText.length - 1) {
         spans.add(const TextSpan(text: ' '));
         }
 
