@@ -582,10 +582,9 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   /// {@endtemplate}
   late final _searchRegexPattern =
       widget.searchRegex ?? RegExp(r'^[a-zA-Z-]*$');
-
    late final _urlRegexPattern =
       widget.urlRegex ?? RegExp(
-  r'(((((http:\/\/)?www\.)|((https:\/\/)?www\.)|(http:\/\/)|(https:\/\/))?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,63}(\/[-a-zA-Z0-9()@:%_\+,.~#?\-$&\/=]*)?)|(youtu.be\/[-a-zA-Z0-9()@:%_\+,.~#?\-$&\/=]*))',
+  r'(?:(?:https?:\/\/|www\.|youtu\.be\/)[\w@:%._\+~#=\/?&-]+)|(?:youtu\.be\/[\w@:%_\+,.~#?&\/=-]+)',
 );
 
   int _lastCursorPosition = 0;
@@ -1052,78 +1051,59 @@ class FlutterTaggerController extends TextEditingController {
 
   ///Parses [text] and styles nested tagged texts using style from [_tagStyles].
   List<TextSpan> _getNestedSpans(String text, int startIndex) {
-    if (text.isEmpty) return [];
+if (text.isEmpty) return [];
 
-    List<TextSpan> spans = [];
-    int start = startIndex;
+  List<TextSpan> spans = [];
 
-    final nestedWords = text.splitWithDelim(_triggerCharactersPattern);
-    bool startsWithTrigger = text[0].contains(_triggerCharactersPattern) &&
-        nestedWords.first.isNotEmpty;
+  // Split the text by spaces while preserving them for correct indexing
+  final words = text.split(' ');
+  bool inTag = false;
+  String currentTag = '';
 
-    String triggerChar = "";
-    int triggerCharIndex = 0;
-
-    for (int i = 0; i < nestedWords.length; i++) {
-      final nestedWord = nestedWords[i];
-// TODO: make own style for url
-       if (_urlSearchRegex!.hasMatch(nestedWord) ) {
+  for (var word in words) {
+    // Handle URL styling if it matches URL pattern
+    if (_urlSearchRegex!.hasMatch(word)) {
       // If the text is a URL, apply underline style
-        spans.add(TextSpan(
-          text: nestedWord,
-          style: _tagStyles['@'],
-        ),);
-        continue;
-      }  
-    else
-
-      if (nestedWord.contains(_triggerCharactersPattern)) {
-        if (triggerChar.isNotEmpty && triggerCharIndex == i - 2) {
-          spans.add(TextSpan(text: triggerChar));
-          start += triggerChar.length;
-          triggerChar = "";
-          triggerCharIndex = i;
-          continue;
-        }
-        triggerChar = nestedWord;
-        triggerCharIndex = i;
-        continue;
-      }
-
-      String word;
-      if (i == 0) {
-        word = startsWithTrigger ? "$triggerChar$nestedWord" : nestedWord;
-      } else {
-        word = "$triggerChar$nestedWord";
-      }
-
-      TaggedText? taggedText;
-
-      if (word.isNotEmpty) {
-        taggedText = _trie.search(word, start);
-      }
-
-      if (taggedText == null) {
-        spans.add(TextSpan(text: word));
-      } else if (taggedText.startIndex == start) {
-        String suffix = word.substring(taggedText.text.length);
-
-        spans.add(
-          TextSpan(
-            text: taggedText.text,
-            style: _tagStyles[triggerChar],
-          ),
-        );
-        if (suffix.isNotEmpty) spans.add(TextSpan(text: suffix));
-      } else {
-        spans.add(TextSpan(text: word));
-      }
-
-      start += word.length;
-      triggerChar = "";
+      spans.add(TextSpan(
+        text: word,
+        style: _tagStyles['@'],
+      ));
+      continue;
     }
 
-    return spans;
+    // Check if the word contains "@" and not followed by space which might indicate it's a mention
+    if (word.contains('@') && !word.endsWith(' ')) {
+      // Append to currentTag if it's part of a compound mention
+      if (inTag) {
+        currentTag += ' $word';
+      } else {
+        currentTag = word;
+        inTag = true;
+      }
+    } else {
+      // If previously capturing a tag, now we finish it
+      if (inTag) {
+        spans.add(TextSpan(
+          text: currentTag,
+          style: _tagStyles['@'],
+        ));
+        inTag = false;
+        currentTag = '';
+      }
+      // Add regular text
+      spans.add(TextSpan(text: word));
+    }
+  }
+
+  // Check if there's an unclosed tag at the end of input
+  if (inTag) {
+    spans.add(TextSpan(
+      text: currentTag,
+      style: _tagStyles['@'],
+    ));
+  }
+
+  return spans;
   }
 
   ///Builds text value with tagged texts styled using styles from [_tagStyles].
