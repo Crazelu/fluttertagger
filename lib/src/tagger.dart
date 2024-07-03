@@ -22,6 +22,9 @@ typedef FlutterTaggerSearchCallback = void Function(
   String triggerCharacter,
 );
 
+/// Indicates where the overlay should be positioned.
+enum OverlayPosition { top, bottom }
+
 /// Provides tagging capabilities (e.g user mentions and adding hashtags)
 /// to a [TextField] returned from [builder].
 ///
@@ -38,7 +41,25 @@ typedef FlutterTaggerSearchCallback = void Function(
 /// Tags in the [TextField] are styled with [TextStyle]
 /// for their associated trigger character defined in [triggerCharacterAndStyles].
 class FlutterTagger extends StatefulWidget {
-  /// Creates an instance of [FlutterTagger]
+  /// Creates a FlutterTagger widget.
+  ///
+  /// A listener is attached to [controller] which activates
+  /// the search context when any trigger character from [triggerCharacterAndStyles]
+  /// is detected. When the search context is active, [onSearch] is called
+  /// with the trigger character and the text typed after it.
+  ///
+  /// [overlay] is shown when the search context is activated.
+  ///
+  /// The [overlayPosition] property indicates where the [overlay] should be positioned:
+  /// above or below the [TextField].
+  ///
+  /// If [animationController] is provided and [overlay] has a connected [Animation],
+  /// [overlay] is shown and dismissed with that animation.
+  ///
+  /// The [padding] is used to position the [overlay] relative to the [TextField] vertically.
+  ///
+  /// The tags in the [TextField] are styled with [TextStyle]
+  /// for their associated trigger character defined in [triggerCharacterAndStyles].
   const FlutterTagger({
     Key? key,
     required this.overlay,
@@ -48,6 +69,7 @@ class FlutterTagger extends StatefulWidget {
     this.padding = EdgeInsets.zero,
     this.overlayHeight = 380,
     this.triggerCharacterAndStyles = const {},
+    this.overlayPosition = OverlayPosition.top,
     this.onFormattedTextChanged,
     this.searchRegex,
     this.triggerCharactersRegex,
@@ -65,7 +87,7 @@ class FlutterTagger extends StatefulWidget {
   /// Padding applied to [overlay].
   final EdgeInsetsGeometry padding;
 
-  /// [overlay]'s height.
+  /// The [overlay]'s height.
   final double overlayHeight;
 
   /// Formats and replaces tags for raw text retrieval.
@@ -90,17 +112,15 @@ class FlutterTagger extends StatefulWidget {
   final void Function(String)? onFormattedTextChanged;
 
   /// {@template searchCallback}
-  /// Called with the search query whenever [FlutterTagger]
-  /// enters the search context.
+  /// Called with the search query and character that triggered the search
+  /// whenever [FlutterTagger] enters the search context.
   /// {@endtemplate}
   final FlutterTaggerSearchCallback onSearch;
 
   /// {@template builder}
   /// Widget builder for [FlutterTagger]'s associated TextField.
   ///  {@endtemplate}
-  /// Returned widget should have a [Container] as parent widget
-  /// with the [GlobalKey] as its key,
-  /// and the [TextField] as its child.
+  /// Returned widget should be the [TextField] with the [GlobalKey] as its key.
   final FlutterTaggerWidgetBuilder builder;
 
   /// {@macro searchRegex}
@@ -120,6 +140,9 @@ class FlutterTagger extends StatefulWidget {
   /// trigger character.
   final Map<String, TextStyle> triggerCharacterAndStyles;
 
+  /// Position of [overlay] relative to the [TextField].
+  final OverlayPosition overlayPosition;
+
   @override
   State<FlutterTagger> createState() => _FlutterTaggerState();
 }
@@ -127,8 +150,8 @@ class FlutterTagger extends StatefulWidget {
 class _FlutterTaggerState extends State<FlutterTagger> {
   FlutterTaggerController get controller => widget.controller;
 
-  late final _parentContainerKey = GlobalKey(
-    debugLabel: "FlutterTagger's child TextField Container key",
+  late final _textFieldKey = GlobalKey(
+    debugLabel: "FlutterTagger's child TextField key",
   );
 
   late Offset _offset = Offset.zero;
@@ -154,7 +177,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   void _computeSize() {
     try {
       final renderBox =
-          _parentContainerKey.currentContext!.findRenderObject() as RenderBox;
+          _textFieldKey.currentContext!.findRenderObject() as RenderBox;
       _width = renderBox.size.width;
       _offset = renderBox.localToGlobal(Offset.zero);
     } catch (e) {
@@ -201,12 +224,24 @@ class _FlutterTaggerState extends State<FlutterTagger> {
 
   /// Creates an overlay to show search result
   OverlayEntry _createOverlay() {
+    double? top;
+    double? bottom;
+
+    if (widget.overlayPosition == OverlayPosition.top) {
+      top = _offset.dy - (widget.overlayHeight + widget.padding.vertical);
+    }
+
+    if (widget.overlayPosition == OverlayPosition.bottom) {
+      bottom = _offset.dy - widget.overlayHeight - widget.padding.vertical;
+    }
+
     return OverlayEntry(
       builder: (_) => Positioned(
         left: _offset.dx,
         width: _width,
         height: widget.overlayHeight,
-        top: _offset.dy - (widget.overlayHeight + widget.padding.vertical),
+        top: top,
+        bottom: bottom,
         child: widget.overlay,
       ),
     );
@@ -822,7 +857,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.builder(context, _parentContainerKey);
+    return widget.builder(context, _textFieldKey);
   }
 }
 
@@ -971,6 +1006,7 @@ class FlutterTaggerController extends TextEditingController {
   @override
   void clear() {
     _clearCallback?.call();
+    _text = '';
     super.clear();
   }
 
