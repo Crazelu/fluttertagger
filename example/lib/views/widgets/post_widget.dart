@@ -8,7 +8,6 @@ class PostWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
@@ -30,36 +29,37 @@ class PostWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    constraints: BoxConstraints(maxWidth: width * .76),
-                    child: CustomText(
-                      text: post.caption,
-                      parentText: "${post.poster.userName} ",
-                      parentTextStyle: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: CustomText(
+                        text: post.caption,
+                        parentText: "${post.poster.userName} ",
+                        parentTextStyle: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        onUserTagPressed: (userId) {
+                          //typically, you'd navigate to details screen
+                          //and fetch user details with userId
+                          debugPrint(userId);
+                        },
                       ),
-                      onUserTagPressed: (userId) {
-                        //typically, you'd navigate to details screen
-                        //and fetch user details with userId
-                        debugPrint(userId);
-                      },
                     ),
-                  ),
-                  Text(
-                    post.time,
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
+                    Text(
+                      post.time,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),

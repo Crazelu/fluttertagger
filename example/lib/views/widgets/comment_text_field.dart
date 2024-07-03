@@ -36,7 +36,7 @@ class CommentTextField extends StatelessWidget {
     return Container(
       key: containerKey,
       constraints: BoxConstraints(
-        maxHeight: insets == EdgeInsets.zero ? 150 : 150 + insets.bottom,
+        maxHeight: insets == EdgeInsets.zero ? 158 : 158 + insets.bottom,
       ),
       padding: const EdgeInsets.symmetric(
         vertical: 20,
