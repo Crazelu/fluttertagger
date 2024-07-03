@@ -696,6 +696,17 @@ class _FlutterTaggerState extends State<FlutterTagger> {
 
     if (_defer) {
       _defer = false;
+
+      // After adding a tag and immediately trying to activate the search context
+      // by typing in a trigger character, the call to _tagListener is deffered.
+      // So this check to activate the search context is repeated here
+      // as the later part of this listener which does that is unreachable
+      // when the call to _tagListener is deffered.
+      int position = currentCursorPosition - 1;
+      if (position >= 0 && triggerCharacters.contains(text[position])) {
+        _shouldSearch = true;
+        _currentTriggerChar = text[position];
+      }
       return;
     }
 
@@ -705,8 +716,8 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       _removeSelection();
     }
 
-    //When a previously selected tag is unselected without removing,
-    //reset tag selection state variables.
+    // When a previously selected tag is unselected without removing,
+    // reset tag selection state variables.
     if (_startOffset != null && currentCursorPosition != _startOffset) {
       _selectedTag = null;
       _startOffset = null;
