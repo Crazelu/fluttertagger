@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:fluttertagger/src/tagged_text.dart';
 import 'package:fluttertagger/src/trie.dart';
 
-///{@macro builder}
+/// {@macro builder}
 typedef FlutterTaggerWidgetBuilder = Widget Function(
   BuildContext context,
   GlobalKey key,
 );
 
-///Formatter for tags in the [TextField] associated
-///with [FlutterTagger].
+/// Formatter for tags in the [TextField] associated
+/// with [FlutterTagger].
 typedef TagTextFormatter = String Function(
   String id,
   String tag,
@@ -22,21 +22,23 @@ typedef FlutterTaggerSearchCallback = void Function(
   String triggerCharacter,
 );
 
-///Provides tagging capabilities (e.g user mentions and adding hashtags)
-///to a [TextField] returned from [builder].
+/// Provides tagging capabilities (e.g user mentions and adding hashtags)
+/// to a [TextField] returned from [builder].
 ///
-///Listens to [controller] and activates search context when [triggerCharacter]
-///is detected; sending subsequent text as search query using [onSearch].
+/// Listens to [controller] and activates search context when
+/// any trigger character from [triggerCharacterAndStyles]
+/// is detected; sending subsequent text as search query using [onSearch].
 ///
-///Search results should be shown in [overlay] which is
-///animated if [animationController] is provided.
+/// Search results should be shown in [overlay] which is
+/// animated if [animationController] is provided.
 ///
-///[FlutterTagger] maintains tag positions during text editing and allows
-///for formatting of the tags in [TextField]'s text value with [tagTextFormatter].
+/// [FlutterTagger] maintains tag positions during text editing and allows
+/// for formatting of the tags in [TextField]'s text value with [tagTextFormatter].
 ///
-///Tags in the [TextField] are styled with [tagStyle].
+/// Tags in the [TextField] are styled with [TextStyle]
+/// for their associated trigger character defined in [triggerCharacterAndStyles].
 class FlutterTagger extends StatefulWidget {
-  ///Creates an instance of [FlutterTagger]
+  /// Creates an instance of [FlutterTagger]
   const FlutterTagger({
     Key? key,
     required this.overlay,
@@ -57,65 +59,65 @@ class FlutterTagger extends StatefulWidget {
         ),
         super(key: key);
 
-  ///Widget shown in the overlay when search context is active.
+  /// Widget shown in the overlay when search context is active.
   final Widget overlay;
 
-  ///Padding applied to [overlay].
+  /// Padding applied to [overlay].
   final EdgeInsetsGeometry padding;
 
-  ///[overlay]'s height.
+  /// [overlay]'s height.
   final double overlayHeight;
 
-  ///Formats and replaces tags for raw text retrieval.
-  ///By default, tags are replaced in this format:
-  ///```dart
-  ///"@Lucky Ebere"
-  ///```
-  ///becomes
+  /// Formats and replaces tags for raw text retrieval.
+  /// By default, tags are replaced in this format:
+  /// ```dart
+  /// "@Lucky Ebere"
+  /// ```
+  /// becomes
   ///
-  ///```dart
-  ///"@6zo22531b866ce0016f9e5tt#Lucky Ebere#"
-  ///```
-  ///assuming that `Lucky Ebere`'s id is `6zo22531b866ce0016f9e5tt`.
+  /// ```dart
+  /// "@6zo22531b866ce0016f9e5tt#Lucky Ebere#"
+  /// ```
+  /// assuming that `Lucky Ebere`'s id is `6zo22531b866ce0016f9e5tt`.
   ///
-  ///Specify this parameter to use a different format.
+  /// Specify this parameter to use a different format.
   final TagTextFormatter? tagTextFormatter;
 
   /// {@macro flutterTaggerController}
   final FlutterTaggerController controller;
 
-  ///Callback to dispatch updated formatted text.
+  /// Callback to dispatch updated formatted text.
   final void Function(String)? onFormattedTextChanged;
 
-  ///{@template searchCallback}
-  ///Called with the search query whenever [FlutterTagger]
-  ///enters the search context.
-  ////// {@endtemplate}
+  /// {@template searchCallback}
+  /// Called with the search query whenever [FlutterTagger]
+  /// enters the search context.
+  /// {@endtemplate}
   final FlutterTaggerSearchCallback onSearch;
 
-  ///{@template builder}
-  ///Widget builder for [FlutterTagger]'s associated TextField.
-  /// {@endtemplate}
-  ///Returned widget should have a [Container] as parent widget
-  ///with the [GlobalKey] as its key,
-  ///and the [TextField] as its child.
+  /// {@template builder}
+  /// Widget builder for [FlutterTagger]'s associated TextField.
+  ///  {@endtemplate}
+  /// Returned widget should have a [Container] as parent widget
+  /// with the [GlobalKey] as its key,
+  /// and the [TextField] as its child.
   final FlutterTaggerWidgetBuilder builder;
 
-  ///{@macro searchRegex}
+  /// {@macro searchRegex}
   final RegExp? searchRegex;
 
-  ///Regex to match allowed trigger characters.
-  ///Trigger characters activate the search context.
-  ///If null, a Regex pattern is constructed from the
-  ///trigger characters in [triggerCharacterAndStyles].
+  /// Regex to match allowed trigger characters.
+  /// Trigger characters activate the search context.
+  /// If null, a Regex pattern is constructed from the
+  /// trigger characters in [triggerCharacterAndStyles].
   final RegExp? triggerCharactersRegex;
 
-  ///Controller for the [overlay]'s animation.
+  /// Controller for the [overlay]'s animation.
   final AnimationController? animationController;
 
-  ///Lookup table of trigger characters and their associated [TextStyle] styles.
-  ///These styles are applied to the tags/mentions resulting from their associated
-  ///trigger character.
+  /// Lookup table of trigger characters and their associated [TextStyle] styles.
+  /// These styles are applied to the tags/mentions resulting from their associated
+  /// trigger character.
   final Map<String, TextStyle> triggerCharacterAndStyles;
 
   @override
@@ -135,20 +137,20 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   OverlayEntry? _overlayEntry;
   late final OverlayState _overlayState = Overlay.of(context);
 
-  ///Formats tag text to include id
+  /// Formats tag text to include id
   String _formatTagText(String id, String tag, String triggerCharacter) {
     return widget.tagTextFormatter?.call(id, tag, triggerCharacter) ??
         "@$id#$tag#";
   }
 
-  ///Updates formatted text
+  /// Updates formatted text
   void _onFormattedTextChanged() {
     controller._onTextChanged(_formattedText);
     widget.onFormattedTextChanged?.call(_formattedText);
   }
 
-  ///Retrieves rendering information necessary to determine where
-  ///the overlay is positioned on the screen.
+  /// Retrieves rendering information necessary to determine where
+  /// the overlay is positioned on the screen.
   void _computeSize() {
     try {
       final renderBox =
@@ -160,8 +162,8 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     }
   }
 
-  ///Hides overlay if [val] is true.
-  ///Otherwise, this computes size, creates and inserts and OverlayEntry.
+  /// Hides overlay if [val] is true.
+  /// Otherwise, this computes size, creates and inserts and OverlayEntry.
   void _shouldHideOverlay(bool val) {
     try {
       if (_hideOverlay == val) return;
@@ -197,7 +199,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     _overlayState.setState(() {});
   }
 
-  ///Creates an overlay to show search result
+  /// Creates an overlay to show search result
   OverlayEntry _createOverlay() {
     return OverlayEntry(
       builder: (_) => Positioned(
@@ -210,11 +212,11 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     );
   }
 
-  ///Custom trie to hold all tags.
-  ///This is quite useful for doing a precise position-based tag search.
+  /// Custom trie to hold all tags.
+  /// This is quite useful for doing a precise position-based tag search.
   late Trie _tagTrie;
 
-  ///Map of tagged texts and their ids
+  /// Map of tagged texts and their ids
   late final Map<TaggedText, String> _tags = {};
 
   Iterable<String> get triggerCharacters =>
@@ -237,7 +239,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     return RegExp(pattern);
   }
 
-  ///Extracts nested tags (if any) from [text] and formats them.
+  /// Extracts nested tags (if any) from [text] and formats them.
   String _parseAndFormatNestedTags(String text, int startIndex) {
     if (text.isEmpty) return "";
     List<String> result = [];
@@ -303,18 +305,18 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     return result.join("");
   }
 
-  ///Formatted text where tags are replaced with the result
-  ///of calling [FlutterTagger.tagTextFormatter] if it's not null.
-  ///Otherwise, tags are replaced in this format:
-  ///```dart
-  ///"@Lucky Ebere"
-  ///```
-  ///becomes
+  /// Formatted text where tags are replaced with the result
+  /// of calling [FlutterTagger.tagTextFormatter] if it's not null.
+  /// Otherwise, tags are replaced in this format:
+  /// ```dart
+  /// "@Lucky Ebere"
+  /// ```
+  /// becomes
   ///
-  ///```dart
-  ///"@6zo22531b866ce0016f9e5tt#Lucky Ebere#"
-  ///```
-  ///assuming that `Lucky Ebere`'s id is `6zo22531b866ce0016f9e5tt`
+  /// ```dart
+  /// "@6zo22531b866ce0016f9e5tt#Lucky Ebere#"
+  /// ```
+  /// assuming that `Lucky Ebere`'s id is `6zo22531b866ce0016f9e5tt`
   String get _formattedText {
     String controllerText = controller.text;
 
@@ -348,14 +350,14 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     return resultString;
   }
 
-  ///Whether to not execute the [_tagListener] logic.
+  /// Whether to not execute the [_tagListener] logic.
   bool _defer = false;
 
-  ///Current tag selected in TextField.
+  /// Current tag selected in TextField.
   TaggedText? _selectedTag;
 
-  ///Adds [tag] and [id] to [_tags] and
-  ///updates TextField value with [tag].
+  /// Adds [tag] and [id] to [_tags] and
+  /// updates TextField value with [tag].
   void _addTag(String id, String tag) {
     _shouldSearch = false;
     _shouldHideOverlay(true);
@@ -421,18 +423,18 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     }
   }
 
-  ///Selects a tag from [_tags] when keyboard action attempts to remove it
-  ///so as to prompt the user.
+  /// Selects a tag from [_tags] when keyboard action attempts to remove it
+  /// so as to prompt the user.
   ///
-  ///The selected tag is removed from the TextField
-  ///when [_removeEditedTags] is triggered.
+  /// The selected tag is removed from the TextField
+  /// when [_removeEditedTags] is triggered.
   ///
-  ///Does nothing when there is no tag or when there's no attempt
-  ///to remove a tag from the TextField.
+  /// Does nothing when there is no tag or when there's no attempt
+  /// to remove a tag from the TextField.
   ///
-  ///Returns `true` if a tag is either selected or removed
-  ///(if it was previously selected).
-  ///Otherwise, returns `false`.
+  /// Returns `true` if a tag is either selected or removed
+  /// (if it was previously selected).
+  /// Otherwise, returns `false`.
   bool _removeEditedTags() {
     try {
       final text = controller.text;
@@ -467,11 +469,11 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     return false;
   }
 
-  ///Back tracks from current cursor position to find and select
-  ///a tag, if any.
+  /// Back tracks from current cursor position to find and select
+  /// a tag, if any.
   ///
-  ///Returns `true` if a tag is found and selected.
-  ///Otherwise, returns `false`.
+  /// Returns `true` if a tag is found and selected.
+  /// Otherwise, returns `false`.
   bool _backtrackAndSelect(TaggedText tag) {
     String text = controller.text;
     if (!text.contains(_triggerCharactersPattern)) return false;
@@ -519,8 +521,8 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     return false;
   }
 
-  ///Updates offsets after [_selectedTag] set in [_backtrackAndSelect]
-  ///has been removed.
+  /// Updates offsets after [_selectedTag] set in [_backtrackAndSelect]
+  /// has been removed.
   void _removeSelection() {
     _tags.remove(_selectedTag);
     _tagTrie.clear();
@@ -538,29 +540,29 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     _onFormattedTextChanged();
   }
 
-  ///Whether a tag is selected in the TextField.
+  /// Whether a tag is selected in the TextField.
   bool _isTagSelected = false;
 
-  ///Start offset for selection in the TextField.
+  /// Start offset for selection in the TextField.
   int? _startOffset;
 
-  ///End offset for selection in the TextField.
+  /// End offset for selection in the TextField.
   int? _endOffset;
 
-  ///Text from the TextField in it's previous state before a new update
-  ///(new text input from keyboard or deletion).
+  /// Text from the TextField in it's previous state before a new update
+  /// (new text input from keyboard or deletion).
   ///
-  ///This is necessary to compare and see if changes have occured and to restore
-  ///the text field content when user attempts to remove a tag
-  ///so that the tag can be selected and with further action, be removed.
+  /// This is necessary to compare and see if changes have occured and to restore
+  /// the text field content when user attempts to remove a tag
+  /// so that the tag can be selected and with further action, be removed.
   String _lastCachedText = "";
 
-  ///Whether the search context is active.
+  /// Whether the search context is active.
   bool _shouldSearch = false;
 
-  ///{@template searchRegex}
-  ///Regex to match allowed search characters.
-  ///Non-conforming characters terminate the search context.
+  /// {@template searchRegex}
+  /// Regex to match allowed search characters.
+  /// Non-conforming characters terminate the search context.
   /// {@endtemplate}
   late final _searchRegexPattern =
       widget.searchRegex ?? RegExp(r'^[a-zA-Z-]*$');
@@ -568,35 +570,35 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   int _lastCursorPosition = 0;
   bool _isBacktrackingToSearch = false;
 
-  ///Last trigger character which activated the search context.
+  /// Last trigger character which activated the search context.
   String _currentTriggerChar = "";
 
-  ///This is triggered when deleting text from TextField that isn't
-  ///a tag. Useful for continuing search without having to
-  ///type a trigger character first.
+  /// This is triggered when deleting text from TextField that isn't
+  /// a tag. Useful for continuing search without having to
+  /// type a trigger character first.
   ///
-  ///E.g, assuming trigger character is '@', if you typed
-  ///```dart
-  ///@lucky|
-  ///```
-  ///the search context is activated and `lucky` is sent as the search query.
+  /// E.g, assuming trigger character is '@', if you typed
+  /// ```dart
+  /// @lucky|
+  /// ```
+  /// the search context is activated and `lucky` is sent as the search query.
   ///
-  ///But if you continue with a terminating character like so:
-  ///```dart
-  ///@lucky |
-  ///```
-  ///the search context is exited and the overlay is dismissed.
+  /// But if you continue with a terminating character like so:
+  /// ```dart
+  /// @lucky |
+  /// ```
+  /// the search context is exited and the overlay is dismissed.
   ///
-  ///However, if the text is edited to bring the cursor back to
+  /// However, if the text is edited to bring the cursor back to
   ///
-  ///```dart
-  ///@luck|
-  ///```
-  ///the search context is entered again and the text after the
-  ///trigger character is sent as the search query.
+  /// ```dart
+  /// @luck|
+  /// ```
+  /// the search context is entered again and the text after the
+  /// trigger character is sent as the search query.
   ///
-  ///Returns `true` if a search query is found from back tracking.
-  ///Otherwise, returns `false`.
+  /// Returns `true` if a search query is found from back tracking.
+  /// Otherwise, returns `false`.
   bool _backtrackAndSearch() {
     String text = controller.text;
     if (!text.contains(_triggerCharactersPattern)) return false;
@@ -634,15 +636,15 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     return false;
   }
 
-  ///Listener attached to [controller] to listen for change in
-  ///search context and tag selection.
+  /// Listener attached to [controller] to listen for change in
+  /// search context and tag selection.
   ///
-  ///Triggers search:
-  ///Activates the search context when last entered character is a trigger character.
+  /// Triggers search:
+  /// Activates the search context when last entered character is a trigger character.
   ///
-  ///Ends Search:
-  ///Exits search context and hides overlay when a terminating character
-  ///not matched by [_searchRegexPattern] is entered.
+  /// Ends Search:
+  /// Exits search context and hides overlay when a terminating character
+  /// not matched by [_searchRegexPattern] is entered.
   void _tagListener() {
     final currentCursorPosition = controller.selection.baseOffset;
     final text = controller.text;
@@ -740,7 +742,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     _onFormattedTextChanged();
   }
 
-  ///Recomputes affected tag positions when text value is modified.
+  /// Recomputes affected tag positions when text value is modified.
   void _recomputeTags(String oldCachedText, String currentText, int position) {
     final currentCursorPosition = controller.selection.baseOffset;
     if (currentCursorPosition != currentText.length) {
@@ -769,9 +771,9 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     }
   }
 
-  ///Extracts text appended to the last [_currentTriggerChar] symbol
-  ///found in the substring of [text] up until [endOffset]
-  ///and executes [FlutterTagger.onSearch].
+  /// Extracts text appended to the last [_currentTriggerChar] symbol
+  /// found in the substring of [text] up until [endOffset]
+  /// and calls [FlutterTagger.onSearch].
   void _extractAndSearch(String text, int endOffset) {
     try {
       int index = text.substring(0, endOffset).lastIndexOf(_currentTriggerChar);
@@ -825,9 +827,9 @@ class _FlutterTaggerState extends State<FlutterTagger> {
 }
 
 /// {@template flutterTaggerController}
-///Controller for [FlutterTagger].
-///This object exposes callback registration bindings to enable clearing
-///[FlutterTagger]'s tags, dismissing overlay and retrieving formatted text.
+/// Controller for [FlutterTagger].
+/// This object exposes callback registration bindings to enable clearing
+/// [FlutterTagger]'s tags, dismissing overlay and retrieving formatted text.
 /// {@endtemplate}
 class FlutterTaggerController extends TextEditingController {
   FlutterTaggerController({String? text}) : super(text: text);
@@ -866,7 +868,7 @@ class FlutterTaggerController extends TextEditingController {
 
   late String _text = "";
 
-  ///Formatted text from [FlutterTagger]
+  /// Formatted text from [FlutterTagger]
   String get formattedText => _text;
 
   Function? _formatTagsCallback;
@@ -893,7 +895,7 @@ class FlutterTaggerController extends TextEditingController {
     }
   }
 
-  ///{@macro formatTags}
+  /// {@macro formatTags}
   void _formatTags([
     RegExp? pattern,
     List<String> Function(String)? parser,
@@ -959,47 +961,46 @@ class FlutterTaggerController extends TextEditingController {
     }
   }
 
-  ///Defers [FlutterTagger]'s listener attached to this controller.
+  /// Defers [FlutterTagger]'s listener attached to this controller.
   void _runDeferedAction(Function action) {
     _deferCallback?.call();
     action.call();
   }
 
-  ///Clears [FlutterTagger] internal tag state.
+  /// Clears [FlutterTagger] internal tag state.
   @override
   void clear() {
     _clearCallback?.call();
     super.clear();
   }
 
-  ///Dismisses overlay.
+  /// Dismisses overlay.
   void dismissOverlay() {
     _dismissOverlayCallback?.call();
   }
 
-  ///Adds a tag.
+  /// Adds a tag.
   void addTag({required String id, required String name}) {
     _addTagCallback?.call(id, name);
   }
 
-  ///Registers callback for clearing [FlutterTagger]'s
+  /// Registers callback for clearing [FlutterTagger]'s
   ///internal tags state.
   void _onClear(Function callback) {
     _clearCallback = callback;
   }
 
-  ///Registers callback for dismissing [FlutterTagger]'s overlay.
+  /// Registers callback for dismissing [FlutterTagger]'s overlay.
   void _onDismissOverlay(Function callback) {
     _dismissOverlayCallback = callback;
   }
 
-  ///Registers callback for retrieving updated.
-  ///formatted text from [FlutterTagger].
+  /// Updates [_text] with updated amd formatted text from [FlutterTagger].
   void _onTextChanged(String newText) {
     _text = newText;
   }
 
-  ///Registers callback for adding tags.
+  /// Registers callback for adding tags.
   void _registerAddTagCallback(Function(String id, String name) callback) {
     _addTagCallback = callback;
   }
@@ -1017,7 +1018,7 @@ class FlutterTaggerController extends TextEditingController {
     return _buildTextSpan(style);
   }
 
-  ///Parses [text] and styles nested tagged texts using style from [_tagStyles].
+  /// Parses [text] and styles nested tagged texts using style from [_tagStyles].
   List<TextSpan> _getNestedSpans(String text, int startIndex) {
     if (text.isEmpty) return [];
 
@@ -1083,7 +1084,7 @@ class FlutterTaggerController extends TextEditingController {
     return spans;
   }
 
-  ///Builds text value with tagged texts styled using styles from [_tagStyles].
+  /// Builds text value with tagged texts styled using styles from [_tagStyles].
   TextSpan _buildTextSpan(TextStyle? style) {
     if (text.isEmpty) return const TextSpan();
 

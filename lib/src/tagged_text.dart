@@ -1,5 +1,5 @@
-///Represents a tag with information about the
-///[text]'s position ([startIndex], [endIndex]) in the TextField.
+/// Represents a tag with information about the
+/// [text]'s position ([startIndex], [endIndex]) in the TextField.
 class TaggedText {
   final int startIndex;
   final int endIndex;

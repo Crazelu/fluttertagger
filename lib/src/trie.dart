@@ -11,8 +11,8 @@ class _TrieNode {
         indices = {};
 }
 
-///A tree data structure for storing tags
-///and performing efficient tag searches.
+/// A tree data structure for storing tags
+/// and performing efficient tag searches.
 class Trie {
   late _TrieNode _root;
 
@@ -24,7 +24,7 @@ class Trie {
     }
   }
 
-  ///Inserts tag into trie.
+  /// Inserts tag into trie.
   void insert(TaggedText tag) {
     int length = tag.text.length;
     _TrieNode node = _root;
@@ -42,8 +42,8 @@ class Trie {
     node.indices.putIfAbsent(tag.startIndex, () => tag.endIndex);
   }
 
-  ///If a [TaggedText] is a substring of [word],
-  ///[TaggedText] is returned. Otherwise, `null` is returned.
+  /// If a [TaggedText] is a substring of [word],
+  /// [TaggedText] is returned. Otherwise, `null` is returned.
   TaggedText? search(String word, int startIndex) {
     int length = word.length;
     _TrieNode node = _root;
@@ -83,7 +83,7 @@ class Trie {
     return tag;
   }
 
-  ///Clears trie.
+  /// Clears trie.
   void clear() {
     _root = _TrieNode();
   }
