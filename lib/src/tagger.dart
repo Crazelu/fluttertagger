@@ -190,24 +190,22 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   void _shouldHideOverlay(bool val) {
     try {
       if (_hideOverlay == val) return;
-      setState(() {
-        _hideOverlay = val;
-        if (_hideOverlay) {
-          widget.animationController?.reverse();
-          if (widget.animationController == null) {
-            _overlayEntry?.remove();
-            _overlayEntry = null;
-          }
-        } else {
+      _hideOverlay = val;
+      if (_hideOverlay) {
+        widget.animationController?.reverse();
+        if (widget.animationController == null) {
           _overlayEntry?.remove();
-
-          _computeSize();
-          _overlayEntry = _createOverlay();
-          _overlayState.insert(_overlayEntry!);
-
-          widget.animationController?.forward();
+          _overlayEntry = null;
         }
-      });
+      } else {
+        _overlayEntry?.remove();
+
+        _computeSize();
+        _overlayEntry = _createOverlay();
+        _overlayState.insert(_overlayEntry!);
+
+        widget.animationController?.forward();
+      }
     } catch (e) {
       debugPrint(e.toString());
     }
