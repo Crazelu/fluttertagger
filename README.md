@@ -42,12 +42,10 @@ FlutterTagger(
             "#": TextStyle(color: Colors.blueAccent),
           },
           overlay: SearchResultView(),
-          builder: (context, containerKey) {
-              //return child TextField wrapped with a Container
-              //and pass it `containerKey`
-              return Container(
-                key: containerKey,
-                child: TextField(
+          builder: (context, textFieldKey) {
+              //return a TextField and pass it `textFieldKey`
+              return TextField(
+                    key: textFieldKey,
                     controller: flutterTaggerController,
                     suffix: IconButton(
                       onPressed: () {
@@ -64,8 +62,7 @@ FlutterTagger(
                       color: Colors.redAccent,
                     ),
                   ),
-                ),
-              );
+                );
           },
         )
 ```

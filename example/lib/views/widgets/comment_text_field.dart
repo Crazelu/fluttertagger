@@ -9,7 +9,7 @@ class CommentTextField extends StatelessWidget {
   final EdgeInsets insets;
   final FocusNode? focusNode;
 
-  ///Key passed down from UserTagger
+  ///Key passed down from FlutterTagger
   final Key? containerKey;
 
   const CommentTextField({
