@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:linkify/linkify.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+// ignore: must_be_immutable
 class CustomText extends StatelessWidget {
   final String text;
   final double? fontSize;
