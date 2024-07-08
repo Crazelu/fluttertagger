@@ -378,15 +378,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       }
     }
 
-    String resultString = result.join(" ");
-
-    // Format the tags in the result string
-    _tags.forEach((tag, id) {
-      resultString = resultString.replaceAll(
-        tag.text,
-        '@$id#${tag.text.substring(1)}#',
-      );
-    });
+    final resultString = result.join(" ");
 
     return resultString;
   }

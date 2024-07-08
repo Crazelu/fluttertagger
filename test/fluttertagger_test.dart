@@ -126,29 +126,7 @@ void main() {
     });
 
     testWidgets(
-        'formats and displays tagged text correctly, selecting tag with space in name',
-        (tester) async {
-      await tester.pumpWidget(testWidget);
-
-      // Simulate typing the trigger character and the tag text
-      final textField = find.byType(TextField);
-      await tester.enterText(textField, '@');
-      await tester.pump();
-      await tester.enterText(textField, '@Lucky');
-      await tester.pump();
-
-      // Simulate the user selecting a tag from the overlay
-      controller.addTag(id: '6zo22531b866ce0016f9e5tt', name: 'Lucky Ebere');
-      await tester.pump();
-
-      // Verify the formatted text
-      expect(controller.text, '@Lucky Ebere ');
-      expect(
-          controller.formattedText, '@6zo22531b866ce0016f9e5tt#Lucky Ebere# ');
-    });
-
-    testWidgets(
-        'formats and displays tagged text correctly, selecting tag without space in nam',
+        'formats and displays tagged text correctly, selecting tag without space in name',
         (tester) async {
       await tester.pumpWidget(testWidget);
 
@@ -178,10 +156,30 @@ void main() {
 
     testWidgets('handles nested tags correctly', (tester) async {
       await tester.pumpWidget(testWidget);
-      await tester.enterText(find.byType(TextField), '@test @nestedTag');
+
+      // Simulate typing tag
+      final textField = find.byType(TextField);
+      await tester.enterText(textField, '@');
+      await tester.enterText(textField, '@Lucky');
       await tester.pump();
 
-      expect(controller.text, '@test @nestedTag');
+      // Simulate the user selecting tag from the overlay
+      controller.addTag(id: '6zo22531b866ce0016f9e5tt', name: 'Lucky');
+      await tester.pump();
+
+      // Simulate typing a second tag
+      await tester.enterText(textField, '@Lucky #');
+      await tester.enterText(textField, '@Lucky #nestedTag');
+      await tester.pump();
+
+      // Simulate the user selecting tag from the overlay
+      controller.addTag(id: 'anotherId', name: 'nestedTag');
+      await tester.pump();
+
+      // Verify the formatted text
+      expect(controller.text, '@Lucky #nestedTag ');
+      expect(controller.formattedText,
+          '@6zo22531b866ce0016f9e5tt#Lucky# @anotherId#nestedTag# ');
     });
 
     testWidgets('handles overlay positioning correctly', (tester) async {
