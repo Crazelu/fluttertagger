@@ -267,6 +267,7 @@ void main() {
       await tester.pump();
 
       expect(controller.text, '');
+      expect(controller.formattedText, '');
     });
   });
 }
