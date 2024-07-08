@@ -125,12 +125,47 @@ void main() {
       expect(find.text('Overlay'), findsOneWidget);
     });
 
-    testWidgets('formats and displays tagged text correctly', (tester) async {
+    testWidgets(
+        'formats and displays tagged text correctly, selecting tag with space in name',
+        (tester) async {
       await tester.pumpWidget(testWidget);
-      await tester.enterText(find.byType(TextField), '@testUser');
+
+      // Simulate typing the trigger character and the tag text
+      final textField = find.byType(TextField);
+      await tester.enterText(textField, '@');
+      await tester.pump();
+      await tester.enterText(textField, '@Lucky');
       await tester.pump();
 
-      expect(controller.text, '@testUser');
+      // Simulate the user selecting a tag from the overlay
+      controller.addTag(id: '6zo22531b866ce0016f9e5tt', name: 'Lucky Ebere');
+      await tester.pump();
+
+      // Verify the formatted text
+      expect(controller.text, '@Lucky Ebere ');
+      expect(
+          controller.formattedText, '@6zo22531b866ce0016f9e5tt#Lucky Ebere# ');
+    });
+
+    testWidgets(
+        'formats and displays tagged text correctly, selecting tag without space in nam',
+        (tester) async {
+      await tester.pumpWidget(testWidget);
+
+      // Simulate typing the trigger character and the tag text
+      final textField = find.byType(TextField);
+      await tester.enterText(textField, '@');
+      await tester.pump();
+      await tester.enterText(textField, '@Lucky');
+      await tester.pump();
+
+      // Simulate the user selecting a tag from the overlay
+      controller.addTag(id: '6zo22531b866ce0016f9e5tt', name: 'Lucky');
+      await tester.pump();
+
+      // Verify the formatted text
+      expect(controller.text, '@Lucky ');
+      expect(controller.formattedText, '@6zo22531b866ce0016f9e5tt#Lucky# ');
     });
 
     testWidgets('hides overlay when exiting search context', (tester) async {
