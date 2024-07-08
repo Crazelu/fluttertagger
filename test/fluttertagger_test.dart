@@ -183,29 +183,30 @@ void main() {
     });
 
     testWidgets('handles overlay positioning correctly', (tester) async {
+      // Overlay content
+      final overlayContent = Container(
+        height: 100,
+        color: Colors.grey,
+        child: const Center(child: Text('Overlay Position Test')),
+      );
+
       testWidget = MaterialApp(
         home: Scaffold(
-          body: Center(
-            child: FlutterTagger(
-              overlay: Container(
-                height: 100,
-                color: Colors.grey,
-                child: const Center(child: Text('Overlay')),
-              ),
-              controller: controller,
-              onSearch: onSearch,
-              builder: (context, key) {
-                return TextField(
-                  key: key,
-                  controller: controller,
-                );
-              },
-              triggerCharacterAndStyles: const {
-                '@': TextStyle(color: Colors.blue),
-                '#': TextStyle(color: Colors.green),
-              },
-              overlayPosition: OverlayPosition.bottom,
-            ),
+          body: FlutterTagger(
+            overlay: overlayContent,
+            controller: controller,
+            onSearch: onSearch,
+            builder: (context, key) {
+              return TextField(
+                key: key,
+                controller: controller,
+              );
+            },
+            triggerCharacterAndStyles: const {
+              '@': TextStyle(color: Colors.blue),
+              '#': TextStyle(color: Colors.green),
+            },
+            overlayPosition: OverlayPosition.bottom,
           ),
         ),
       );
@@ -228,7 +229,16 @@ void main() {
       await tester.enterText(textField, '@test');
       await tester.pumpAndSettle();
 
-      expect(find.text('Overlay'), findsOneWidget);
+      // Verify the overlay is shown
+      expect(find.text('Overlay Position Test'), findsOneWidget);
+
+      // Verify the position of the overlay
+      final overlayFinder = find.byWidget(overlayContent);
+      final overlayPosition = tester.getTopLeft(overlayFinder);
+      final textFieldPosition = tester.getBottomLeft(textField);
+
+      // Check if the overlay is positioned below the TextField
+      expect(overlayPosition.dy, greaterThanOrEqualTo(textFieldPosition.dy));
     });
 
     testWidgets('formats text with specific pattern and parser',
