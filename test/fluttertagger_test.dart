@@ -245,17 +245,25 @@ void main() {
       controller.addTag(id: '123', name: 'testUser');
       await tester.pump();
 
-      // Simulate the user deleting the tag text character
+      // Simulate the user deleting the tag text
       // From actual interactions, 3 backspaces are required to clear
+      // Text and FormattedText remains unchanged until the last delete event
       await tester.tap(textField);
       await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
       await tester.pump();
+      expect(controller.text, '@testUser');
+      expect(controller.formattedText, '@123#testUser#');
+
       await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
       await tester.pump();
+      expect(controller.text, '@testUser');
+      expect(controller.formattedText, '@123#testUser#');
+
       await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
       await tester.pump();
 
       // Verify the formatted text is now empty
+      expect(controller.text, '');
       expect(controller.formattedText, '');
     });
 
