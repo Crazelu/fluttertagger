@@ -318,7 +318,7 @@ void main() {
       final overlayPosition = tester.getTopLeft(overlayFinder);
       final textFieldPosition = tester.getBottomLeft(textField);
 
-      // Check if the overlay is positioned below the TextField
+      // Check if the overlay is positioned above the TextField
       expect(overlayPosition.dy, lessThanOrEqualTo(textFieldPosition.dy));
     });
 
