@@ -425,11 +425,6 @@ class _FlutterTaggerState extends State<FlutterTagger> {
         selectionOffset++;
       }
 
-      // if (text.length - 1 == position || text[position + 1] != ' ') {
-      //   newText += " ";
-      //   selectionOffset++;
-      // }
-
       final oldCachedText = _lastCachedText;
       _lastCachedText = newText;
       controller.text = newText;
