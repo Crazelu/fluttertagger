@@ -148,9 +148,31 @@ void main() {
 
     testWidgets('hides overlay when exiting search context', (tester) async {
       await tester.pumpWidget(testWidget);
-      await tester.enterText(find.byType(TextField), '@test ');
+
+      final textField = find.byType(TextField);
+      await tester.tap(textField);
       await tester.pump();
 
+      // Incrementally enter each character to simulate typing
+      await tester.enterText(textField, '@');
+      await tester.pump();
+      await tester.enterText(textField, '@t');
+      await tester.pump();
+      await tester.enterText(textField, '@te');
+      await tester.pump();
+      await tester.enterText(textField, '@tes');
+      await tester.pump();
+      await tester.enterText(textField, '@test');
+      await tester.pumpAndSettle();
+
+      // Verify overlay is shown
+      expect(find.text('Overlay'), findsOneWidget);
+
+      // Enter a space to exit the search context
+      await tester.enterText(textField, '@test ');
+      await tester.pumpAndSettle();
+
+      // Verify overlay is hidden
       expect(find.text('Overlay'), findsNothing);
     });
 
