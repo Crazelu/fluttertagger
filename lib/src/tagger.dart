@@ -918,16 +918,16 @@ class FlutterTaggerController extends TextEditingController {
   Function? _formatTagsCallback;
 
   /// {@template formatTags}
-  ///Extracts tags from [FlutterTaggerController]'s [text] and formats the textfield to display them as tags.
-  ///This should be called after [FlutterTaggerController] is constructed with a non-null
-  ///text value that contain unformatted tags.
+  /// Extracts tags from [FlutterTaggerController]'s [text] and formats the textfield to display them as tags.
+  /// This should be called after [FlutterTaggerController] is constructed with a non-null
+  /// text value that contain unformatted tags.
   ///
-  ///[pattern] -> Pattern to match tags.
-  ///Specify this if you supply your own [FlutterTagger.tagTextFormatter].
+  /// [pattern] -> Pattern to match tags.
+  /// Specify this if you supply your own [FlutterTagger.tagTextFormatter].
   ///
-  ///[parser] -> Parser to extract id and tag name for regex matches.
-  ///Returned list should have this structure: `[id, tagName]`.
-  ///{@endtemplate}
+  /// [parser] -> Parser to extract id and tag name for regex matches.
+  /// Returned list should have this structure: `[id, tagName]`.
+  /// {@endtemplate}
   void formatTags({
     RegExp? pattern,
     List<String> Function(String)? parser,
@@ -952,10 +952,10 @@ class FlutterTaggerController extends TextEditingController {
     parser ??= (value) {
       final split = value.split("#");
       if (split.length == 4) {
-        //default hashtag group match (tag and id)
+        // default hashtag group match (tag and id)
         return [split[1].trim(), split[2].trim()];
       }
-      //default user mention group match (name and id)
+      // default user mention group match (name and id)
       final id = split.first.trim().replaceFirst("@", "");
       return [id, split[split.length - 2].trim()];
     };
@@ -1030,7 +1030,7 @@ class FlutterTaggerController extends TextEditingController {
   }
 
   /// Registers callback for clearing [FlutterTagger]'s
-  ///internal tags state.
+  /// internal tags state.
   void _onClear(Function callback) {
     _clearCallback = callback;
   }
@@ -1040,7 +1040,7 @@ class FlutterTaggerController extends TextEditingController {
     _dismissOverlayCallback = callback;
   }
 
-  /// Updates [_text] with updated amd formatted text from [FlutterTagger].
+  /// Updates [_text] with updated and formatted text from [FlutterTagger].
   void _onTextChanged(String newText) {
     _text = newText;
   }
