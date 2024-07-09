@@ -204,7 +204,7 @@ void main() {
           '@6zo22531b866ce0016f9e5tt#Lucky# @anotherId#nestedTag# ');
     });
 
-    testWidgets('handles overlay positioning correctly', (tester) async {
+    testWidgets('handles overlay positioning bottom correctly', (tester) async {
       // Overlay content
       final overlayContent = Container(
         height: 100,
@@ -261,6 +261,65 @@ void main() {
 
       // Check if the overlay is positioned below the TextField
       expect(overlayPosition.dy, greaterThanOrEqualTo(textFieldPosition.dy));
+    });
+
+    testWidgets('handles overlay positioning top correctly', (tester) async {
+      // Overlay content
+      final overlayContent = Container(
+        height: 100,
+        color: Colors.grey,
+        child: const Center(child: Text('Overlay Position Test')),
+      );
+
+      testWidget = MaterialApp(
+        home: Scaffold(
+          body: FlutterTagger(
+            overlay: overlayContent,
+            controller: controller,
+            onSearch: onSearch,
+            builder: (context, key) {
+              return TextField(
+                key: key,
+                controller: controller,
+              );
+            },
+            triggerCharacterAndStyles: const {
+              '@': TextStyle(color: Colors.blue),
+              '#': TextStyle(color: Colors.green),
+            },
+            overlayPosition: OverlayPosition.top,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(testWidget);
+
+      final textField = find.byType(TextField);
+      await tester.tap(textField);
+      await tester.pump();
+
+      // Incrementally enter each character to simulate typing
+      await tester.enterText(textField, '@');
+      await tester.pump();
+      await tester.enterText(textField, '@t');
+      await tester.pump();
+      await tester.enterText(textField, '@te');
+      await tester.pump();
+      await tester.enterText(textField, '@tes');
+      await tester.pump();
+      await tester.enterText(textField, '@test');
+      await tester.pumpAndSettle();
+
+      // Verify the overlay is shown
+      expect(find.text('Overlay Position Test'), findsOneWidget);
+
+      // Verify the position of the overlay
+      final overlayFinder = find.byWidget(overlayContent);
+      final overlayPosition = tester.getTopLeft(overlayFinder);
+      final textFieldPosition = tester.getBottomLeft(textField);
+
+      // Check if the overlay is positioned below the TextField
+      expect(overlayPosition.dy, lessThanOrEqualTo(textFieldPosition.dy));
     });
 
     testWidgets('formats text with specific pattern and parser',
