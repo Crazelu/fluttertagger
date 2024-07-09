@@ -20,7 +20,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 
 ```yaml
 dependencies:
-  fluttertagger: ^2.0.0
+  fluttertagger: ^2.1.0
 ```
 
 ## Import the package in your project 📥

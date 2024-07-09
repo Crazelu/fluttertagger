@@ -29,3 +29,10 @@
 * Adds improvement to logic which re-activates the search context from backtracking.
 * Updates documentation and example project.
 
+## 2.1.0
+
+* Introduces `OverlayPosition` to indicate where the overlay should be positioned relative to the `TextField`.
+* Clears FlutterTaggerController's `formattedText` when `clear` is called.
+* Fixes issue with re-activating the search context with a trigger character immediately after adding a tag.
+* Removes the need for TextFields returned from FlutterTagger's builder to be wrapped with a Container to which the key from the closure must be passed. The key can now be passed directly to the TextField.
+
