@@ -20,7 +20,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 
 ```yaml
 dependencies:
-  fluttertagger: ^2.1.0
+  fluttertagger: ^2.1.1
 ```
 
 ## Import the package in your project 📥
@@ -40,8 +40,8 @@ FlutterTagger(
           //characters that can trigger a search and the styles
           //to be applied to their tagged results in the TextField
           triggerCharacterAndStyles: const {
-            "@": TextStyle(color: Colors.pinkAccent),
-            "#": TextStyle(color: Colors.blueAccent),
+            '@': TextStyle(color: Colors.pinkAccent),
+            '#': TextStyle(color: Colors.blueAccent),
           },
           overlay: SearchResultView(),
           builder: (context, textFieldKey) {
@@ -69,6 +69,59 @@ FlutterTagger(
         )
 ```
 
+Here's how trigger a search by updating the controller directly instead of typing into a keyboard:
+
+```dart
+FlutterTagger(
+          controller: flutterTaggerController,
+          onSearch: (query, triggerCharacter) {
+              //perform search
+          },
+          //characters that can trigger a search and the styles
+          //to be applied to their tagged results in the TextField
+          triggerCharacterAndStyles: const {
+            '@': TextStyle(color: Colors.pinkAccent),
+            '#': TextStyle(color: Colors.blueAccent),
+          },
+          overlay: SearchResultView(),
+          builder: (context, textFieldKey) {
+              //return a TextField and pass it `textFieldKey`
+              return TextField(
+                    key: textFieldKey,
+                    controller: flutterTaggerController,
+                    suffix: IconButton(
+                      onPressed: () {
+                        //get formatted text from controller
+                        String text = flutterTaggerController.formattedText;
+
+                        // append a trigger character to activate the search context
+                        flutterTaggerController.text = text += '#';
+
+                        // update text selection
+                        flutterTaggerController.selection = TextSelection.fromPosition(
+                          TextPosition(offset: flutterTaggerController.text.length),
+                        );
+
+                        // append other characters to trigger search
+                        flutterTaggerController.text = text += 'f';
+
+                        // update text selection
+                        flutterTaggerController.selection = TextSelection.fromPosition(
+                          TextPosition(offset: flutterTaggerController.text.length),
+                        );
+
+                        // then call formatTags on the controller to preserve formatting
+                        flutterTaggerController.formatTags();
+                      },
+                    icon: const Icon(
+                      Icons.send,
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                );
+          },
+        )
+```
 
 Explore detailed example demo [here](https://github.com/Crazelu/fluttertagger/tree/main/example).
 
