@@ -739,6 +739,10 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     }
 
     if (_lastCachedText == text) {
+      if (position >= 0 && triggerCharacters.contains(text[position])) {
+        _shouldSearch = true;
+        _currentTriggerChar = text[position];
+      }
       _recomputeTags(oldCachedText, text, position);
       _onFormattedTextChanged();
       return;

@@ -3,6 +3,7 @@ description: A Flutter package that allows for the extension of TextFields to pr
 version: 2.1.0
 repository: https://github.com/Crazelu/fluttertagger
 issue_tracker: https://github.com/Crazelu/fluttertagger/issues
+topics: [user, mention, hashtag, tagging]
 
 environment:
   sdk: ">=2.17.1 <4.0.0"

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:example/models/user.dart';
 import 'package:example/views/widgets/custom_text_field.dart';
+import 'package:fluttertagger/fluttertagger.dart';
 
 class CommentTextField extends StatelessWidget {
-  final TextEditingController controller;
+  final FlutterTaggerController controller;
   final List<String> emojis;
   final VoidCallback onSend;
   final EdgeInsets insets;
@@ -60,10 +61,11 @@ class CommentTextField extends StatelessWidget {
                       fontSize: 24,
                       emoji: emoji,
                       onTap: (emoji) {
-                        controller.text += emoji;
+                        controller.text = controller.formattedText + emoji;
                         controller.selection = TextSelection.fromPosition(
                           TextPosition(offset: controller.text.length),
                         );
+                        controller.formatTags();
                       },
                     )
                 ],
