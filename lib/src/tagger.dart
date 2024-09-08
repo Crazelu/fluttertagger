@@ -693,6 +693,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     }
 
     if (_defer) {
+      _lastCachedText = text;
       _defer = false;
 
       // After adding a tag and immediately trying to activate the search context
@@ -846,8 +847,8 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     _tagTrie = controller._trie;
     controller._setDeferCallback(() => _defer = true);
     controller._setTags(_tags);
-    controller._setTriggerCharactersRegExpPattern(_triggerCharactersPattern);
     controller._setTagStyles(widget.triggerCharacterAndStyles);
+    controller._setTriggerCharactersRegExpPattern(_triggerCharactersPattern);
     controller.addListener(_tagListener);
     controller._onClear(() {
       _tags.clear();
@@ -1149,7 +1150,9 @@ class FlutterTaggerController extends TextEditingController {
       if (currentText.contains(_triggerCharactersPattern)) {
         final nestedSpans = _getNestedSpans(currentText, start);
         spans.addAll(nestedSpans);
-        spans.add(const TextSpan(text: " "));
+        if (i < splitText.length - 1 && splitText[i + 1].isNotEmpty) {
+          spans.add(const TextSpan(text: " "));
+        }
 
         start = end + 1;
         if (i + 1 < splitText.length) {
