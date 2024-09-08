@@ -1,6 +1,6 @@
 name: fluttertagger
 description: A Flutter package that allows for the extension of TextFields to provide tagging capabilities (user mentions, hashtags, etc).
-version: 2.2.0
+version: 2.2.1
 repository: https://github.com/Crazelu/fluttertagger
 issue_tracker: https://github.com/Crazelu/fluttertagger/issues
 topics: [user, mention, hashtag, tagging]

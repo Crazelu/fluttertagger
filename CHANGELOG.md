@@ -44,3 +44,7 @@
 
 * Fixes issue with text selection throwing range error for "Select All" option or by manually selecting all characters in the text field.
 * Adds `cursorPosition` to `FlutterTaggerController` which reports the position of the cursor in the formatted text.
+
+## 2.2.1
+
+* Documentation update.
