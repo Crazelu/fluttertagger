@@ -61,11 +61,20 @@ class CommentTextField extends StatelessWidget {
                       fontSize: 24,
                       emoji: emoji,
                       onTap: (emoji) {
-                        controller.text = controller.formattedText + emoji;
-                        controller.selection = TextSelection.fromPosition(
-                          TextPosition(offset: controller.text.length),
-                        );
+                        final baseOffset = controller.selection.baseOffset;
+                        final cursorPosition = controller.cursorPosition;
+                        final substring = controller.formattedText
+                            .substring(0, cursorPosition);
+                        final newText = substring +
+                            emoji +
+                            controller.formattedText.substring(cursorPosition);
+
+                        controller.text = newText;
                         controller.formatTags();
+
+                        controller.selection = TextSelection.fromPosition(
+                          TextPosition(offset: baseOffset + emoji.length),
+                        );
                       },
                     )
                 ],

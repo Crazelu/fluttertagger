@@ -401,5 +401,32 @@ void main() {
       expect(controller.text, '');
       expect(controller.formattedText, '');
     });
+
+    testWidgets('returns correct cursor position', (tester) async {
+      await tester.pumpWidget(testWidget);
+
+      expect(controller.cursorPosition, 0);
+
+      // Simulate typing the trigger character and the tag text
+      final textField = find.byType(TextField);
+
+      await tester.enterText(textField, 'Hi @');
+      await tester.pump();
+
+      // Verify cursor position
+      expect(controller.cursorPosition, 4);
+
+      await tester.enterText(textField, 'Hi @brad');
+      await tester.pump();
+
+      // Simulate the user selecting a tag from the overlay
+      controller.addTag(id: '999', name: 'brad');
+      await tester.pump();
+
+      // Verify the formatted text
+      expect(controller.formattedText, 'Hi @999#brad# ');
+      // Verify cursor position
+      expect(controller.cursorPosition, 14);
+    });
   });
 }

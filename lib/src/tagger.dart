@@ -849,6 +849,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     controller._setTags(_tags);
     controller._setTagStyles(widget.triggerCharacterAndStyles);
     controller._setTriggerCharactersRegExpPattern(_triggerCharactersPattern);
+    controller._registerFormatTagTextCallback(_formatTagText);
     controller.addListener(_tagListener);
     controller._onClear(() {
       _tags.clear();
@@ -910,12 +911,59 @@ class FlutterTaggerController extends TextEditingController {
     _deferCallback = callback;
   }
 
+  int _cursorposition = 0;
+
+  /// Position of the cursor in [formattedText].
+  int get cursorPosition => _cursorposition;
+
+  /// Computes position of cursor in [formattedText] at [selectionOffset]
+  /// in [text] by exploding tags in [text] to their formatted form (with ID).
+  int _getCursorPosition(int selectionOffset) {
+    String subText = text.substring(0, selectionOffset);
+    int offset = 0;
+
+    for (var tag in _tags.keys) {
+      if (tag.startIndex < selectionOffset && tag.endIndex <= selectionOffset) {
+        final id = _tags[tag]!;
+        final tagText = tag.text.substring(1);
+        final triggerCharacter = tag.text[0];
+
+        final formattedTagText =
+            _formatTagTextCallback?.call(id, tagText, triggerCharacter);
+
+        if (formattedTagText != null) {
+          final newText = subText.replaceRange(
+            tag.startIndex + offset,
+            tag.endIndex + offset,
+            formattedTagText,
+          );
+
+          offset = newText.length - subText.length;
+          subText = newText;
+        }
+      }
+    }
+    return subText.length;
+  }
+
+  @override
+  set selection(TextSelection newSelection) {
+    if (newSelection.isValid) {
+      _cursorposition = _getCursorPosition(newSelection.baseOffset);
+    } else {
+      _cursorposition = _text.length;
+    }
+    super.selection = newSelection;
+  }
+
   Function? _deferCallback;
   Function? _clearCallback;
   Function? _dismissOverlayCallback;
   Function(String id, String name)? _addTagCallback;
+  String Function(String id, String tag, String triggerCharacter)?
+      _formatTagTextCallback;
 
-  late String _text = "";
+  String _text = "";
 
   /// Formatted text from [FlutterTagger]
   String get formattedText => _text;
@@ -1053,6 +1101,13 @@ class FlutterTaggerController extends TextEditingController {
   /// Registers callback for adding tags.
   void _registerAddTagCallback(Function(String id, String name) callback) {
     _addTagCallback = callback;
+  }
+
+  /// Registers callback for formatting tag texts.
+  void _registerFormatTagTextCallback(
+    String Function(String id, String tag, String triggerCharacter) callback,
+  ) {
+    _formatTagTextCallback = callback;
   }
 
   @override

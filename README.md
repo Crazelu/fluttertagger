@@ -20,7 +20,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 
 ```yaml
 dependencies:
-  fluttertagger: ^2.1.1
+  fluttertagger: ^2.2.1
 ```
 
 ## Import the package in your project 📥
@@ -85,13 +85,13 @@ FlutterTagger(
           },
           overlay: SearchResultView(),
           builder: (context, textFieldKey) {
-              //return a TextField and pass it `textFieldKey`
+              // return a TextField and pass it `textFieldKey`
               return TextField(
                     key: textFieldKey,
                     controller: flutterTaggerController,
                     suffix: IconButton(
                       onPressed: () {
-                        //get formatted text from controller
+                        // get formatted text from controller
                         String text = flutterTaggerController.formattedText;
 
                         // append a trigger character to activate the search context

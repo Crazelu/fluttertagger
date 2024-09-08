@@ -39,3 +39,8 @@
 ## 2.1.1
 
 * Fixes issue with activating search context after updating controller's text directly.
+
+## 2.2.0
+
+* Fixes issue with text selection throwing range error for "Select All" option or by manually selecting all characters in the text field.
+* Adds `cursorPosition` to `FlutterTaggerController` which reports the position of the cursor in the formatted text.
