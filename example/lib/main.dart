@@ -57,7 +57,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    // _focusNode.addListener(_focusListener);
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 150),
@@ -86,16 +85,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     var insets = MediaQuery.of(context).viewInsets;
     return GestureDetector(
-      onTap: () {
-        _focusNode.unfocus();
-        // _controller.dismissOverlay();
-      },
+      onTap: _focusNode.unfocus,
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.redAccent,
           title: const Text("The Squad"),
         ),
         bottomNavigationBar: FlutterTagger(
+          triggerStrategy: TriggerStrategy.eager,
           controller: _controller,
           animationController: _animationController,
           onSearch: (query, triggerChar) {

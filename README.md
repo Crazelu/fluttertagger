@@ -20,7 +20,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 
 ```yaml
 dependencies:
-  fluttertagger: ^2.2.1
+  fluttertagger: ^2.3.0
 ```
 
 ## Import the package in your project 📥
@@ -43,6 +43,12 @@ FlutterTagger(
             '@': TextStyle(color: Colors.pinkAccent),
             '#': TextStyle(color: Colors.blueAccent),
           },
+          //this will cause the onSearch callback to be invoked
+          //immediately a trigger character is detected.
+          //The default behaviour defers the onSearch invocation
+          //until a searchable character has been entered after
+          //the trigger character.
+          triggerStrategy: TriggerStrategy.eager,
           overlay: SearchResultView(),
           builder: (context, textFieldKey) {
               //return a TextField and pass it `textFieldKey`

@@ -27,9 +27,8 @@ class SearchViewModel {
   }
 
   Future<void> searchUser(String query) async {
-    if (query.isEmpty) return;
-
     _activeView.value = SearchResultView.users;
+    if (query.isEmpty) return;
 
     query = query.toLowerCase().trim();
 
@@ -52,9 +51,8 @@ class SearchViewModel {
   }
 
   Future<void> searchHashtag(String query) async {
-    if (query.isEmpty) return;
-
     _activeView.value = SearchResultView.hashtag;
+    if (query.isEmpty) return;
 
     query = query.toLowerCase().trim();
 

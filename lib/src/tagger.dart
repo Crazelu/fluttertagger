@@ -25,6 +25,18 @@ typedef FlutterTaggerSearchCallback = void Function(
 /// Indicates where the overlay should be positioned.
 enum OverlayPosition { top, bottom }
 
+/// {@template triggerStrategy}
+/// Strategy to adopt when a trigger character is detected.
+///
+/// [eager] will cause the search callback to be invoked immediately
+/// a trigger character is detected.
+///
+/// [deferred] will cause the search callback to be invoked only when
+/// a searchable character is entered after the trigger
+/// character is detected. This is the default.
+/// {@endtemplate}
+enum TriggerStrategy { eager, deferred }
+
 /// Provides tagging capabilities (e.g user mentions and adding hashtags)
 /// to a [TextField] returned from [builder].
 ///
@@ -70,6 +82,7 @@ class FlutterTagger extends StatefulWidget {
     this.overlayHeight = 380,
     this.triggerCharacterAndStyles = const {},
     this.overlayPosition = OverlayPosition.top,
+    this.triggerStrategy = TriggerStrategy.deferred,
     this.onFormattedTextChanged,
     this.searchRegex,
     this.triggerCharactersRegex,
@@ -142,6 +155,9 @@ class FlutterTagger extends StatefulWidget {
 
   /// Position of [overlay] relative to the [TextField].
   final OverlayPosition overlayPosition;
+
+  /// {@macro triggerStrategy}
+  final TriggerStrategy triggerStrategy;
 
   @override
   State<FlutterTagger> createState() => _FlutterTaggerState();
@@ -354,10 +370,11 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     int selectionOffset = 0;
 
     if (position != text.length - 1) {
-      index = text.substring(0, position).lastIndexOf(_currentTriggerChar);
+      index = text.substring(0, position + 1).lastIndexOf(_currentTriggerChar);
     } else {
       index = text.lastIndexOf(_currentTriggerChar);
     }
+
     if (index >= 0) {
       _defer = true;
 
@@ -655,6 +672,9 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       if (position >= 0 && triggerCharacters.contains(text[position])) {
         _shouldSearch = true;
         _currentTriggerChar = text[position];
+        if (widget.triggerStrategy == TriggerStrategy.eager) {
+          _extractAndSearch(text, position);
+        }
       }
       return;
     }
@@ -693,6 +713,9 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       if (position >= 0 && triggerCharacters.contains(text[position])) {
         _shouldSearch = true;
         _currentTriggerChar = text[position];
+        if (widget.triggerStrategy == TriggerStrategy.eager) {
+          _extractAndSearch(text, position);
+        }
       }
       _recomputeTags(oldCachedText, text, position);
       _onFormattedTextChanged();
@@ -722,6 +745,9 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     if (position >= 0 && triggerCharacters.contains(text[position])) {
       _shouldSearch = true;
       _currentTriggerChar = text[position];
+      if (widget.triggerStrategy == TriggerStrategy.eager) {
+        _extractAndSearch(text, position);
+      }
       _recomputeTags(oldCachedText, text, position);
       _onFormattedTextChanged();
       return;
@@ -775,7 +801,8 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   /// and calls [FlutterTagger.onSearch].
   void _extractAndSearch(String text, int endOffset) {
     try {
-      int index = text.substring(0, endOffset).lastIndexOf(_currentTriggerChar);
+      int index =
+          text.substring(0, endOffset + 1).lastIndexOf(_currentTriggerChar);
 
       if (index < 0) return;
 
