@@ -54,3 +54,7 @@
 * Updates overlay implementation to use `OverlayPortal` which brings in the fix that lets the overlay reposition itself when the keyboard is dismissed.
 
 * Introduces `TriggerStrategy` to indicate how immediate the search callback should be invoked when a search trigger character is detected.
+
+## 2.3.1
+
+* Adds `tags` getter to `FlutterTaggerController` which returns the currently applied tags.

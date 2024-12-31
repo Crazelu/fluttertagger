@@ -457,5 +457,41 @@ void main() {
       // Verify cursor position
       expect(controller.cursorPosition, 14);
     });
+
+    testWidgets('returns correct tags', (tester) async {
+      await tester.pumpWidget(_buildTestWidget(controller: controller));
+
+      // Simulate typing the trigger character and the tag text
+      final textField = find.byType(TextField);
+
+      await tester.enterText(textField, 'Hi @');
+      await tester.pump();
+
+      await tester.enterText(textField, 'Hi @brad');
+      await tester.pump();
+
+      // Simulate the user selecting a tag from the overlay
+      controller.addTag(id: '1', name: 'brad');
+      await tester.pump();
+
+      await tester.enterText(textField, 'Hi @brad #');
+      await tester.pump();
+
+      await tester.enterText(textField, 'Hi @brad #f');
+      await tester.pump();
+
+      // Simulate the user selecting a tag from the overlay
+      controller.addTag(id: '2', name: 'flutter');
+      await tester.pump();
+
+      // Verify the applied tags
+      expect(
+        controller.tags,
+        const [
+          Tag(id: '1', text: 'brad', triggerCharacter: '@'),
+          Tag(id: '2', text: 'flutter', triggerCharacter: '#'),
+        ],
+      );
+    });
   });
 }

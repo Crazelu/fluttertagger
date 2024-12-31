@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertagger/src/tag.dart';
 import 'package:fluttertagger/src/tagged_text.dart';
 import 'package:fluttertagger/src/trie.dart';
 
@@ -1228,6 +1229,91 @@ class FlutterTaggerController extends TextEditingController {
       }
     }
     return TextSpan(children: spans, style: style);
+  }
+
+  /// Extracts nested tags (if any) from [text].
+  List<Tag> _getTags(String text, int startIndex) {
+    if (text.isEmpty) return [];
+    List<Tag> result = [];
+    int start = startIndex;
+
+    final nestedWords = text.splitWithDelim(_triggerCharactersPattern);
+    bool startsWithTrigger = text[0].contains(_triggerCharactersPattern) &&
+        nestedWords.first.isNotEmpty;
+
+    String triggerChar = "";
+    int triggerCharIndex = 0;
+
+    for (int i = 0; i < nestedWords.length; i++) {
+      final nestedWord = nestedWords[i];
+
+      if (nestedWord.contains(_triggerCharactersPattern)) {
+        if (triggerChar.isNotEmpty && triggerCharIndex == i - 2) {
+          start += triggerChar.length;
+          triggerChar = "";
+          triggerCharIndex = i;
+          continue;
+        }
+        triggerChar = nestedWord;
+        triggerCharIndex = i;
+        continue;
+      }
+
+      String word;
+      if (i == 0) {
+        word = startsWithTrigger ? "$triggerChar$nestedWord" : nestedWord;
+      } else {
+        word = "$triggerChar$nestedWord";
+      }
+
+      TaggedText? taggedText;
+
+      if (word.isNotEmpty) {
+        taggedText = _trie.search(word, start);
+      }
+
+      if (taggedText != null && taggedText.startIndex == start) {
+        final tag = Tag(
+          id: _tags[taggedText]!,
+          text: taggedText.text.replaceAll(triggerChar, ""),
+          triggerCharacter: triggerChar,
+        );
+        result.add(tag);
+      }
+
+      start += word.length;
+      triggerChar = "";
+    }
+
+    return result;
+  }
+
+  /// The tags that are currently applied.
+  Iterable<Tag> get tags {
+    if (text.isEmpty) return [];
+
+    final splitText = text.split(" ");
+
+    List<Tag> result = [];
+    int start = 0;
+    int end = splitText.first.length;
+    int length = splitText.length;
+
+    for (int i = 0; i < length; i++) {
+      final text = splitText[i];
+
+      if (text.contains(_triggerCharactersPattern)) {
+        final tags = _getTags(text, start);
+        result.addAll(tags);
+      }
+
+      start = end + 1;
+      if (i + 1 < length) {
+        end = start + splitText[i + 1].length;
+      }
+    }
+
+    return result;
   }
 }
 

@@ -50,7 +50,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     //wish to update its text value with raw tag string,
     //call (_controller.formatTags) after that.
     text:
-        "Hey @11a27531b866ce0016f9e582#brad#. It's time to #11a27531b866ce0016f9e582#Flutter#!",
+        "Hey @11a27531b866ce0016f9e582#brad#. It's time to #93f27531f294jp0016f9k013#Flutter#!",
   );
   late final _focusNode = FocusNode();
 
