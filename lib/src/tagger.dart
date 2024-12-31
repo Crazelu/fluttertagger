@@ -677,6 +677,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
           _extractAndSearch(text, position);
         }
       }
+      _onFormattedTextChanged();
       return;
     }
 
