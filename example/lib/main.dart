@@ -40,7 +40,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<Offset> _animation;
 
-  double overlayHeight = 380;
+  double overlayHeight = 300;
 
   late final homeViewModel = HomeViewModel();
   late final _controller = FlutterTaggerController(
@@ -54,16 +54,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   );
   late final _focusNode = FocusNode();
 
-  void _focusListener() {
-    if (!_focusNode.hasFocus) {
-      _controller.dismissOverlay();
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    _focusNode.addListener(_focusListener);
+    // _focusNode.addListener(_focusListener);
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 150),
@@ -83,7 +77,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   void dispose() {
     _animationController.dispose();
-    _focusNode.removeListener(_focusListener);
     _focusNode.dispose();
     _controller.dispose();
     super.dispose();
@@ -94,7 +87,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     var insets = MediaQuery.of(context).viewInsets;
     return GestureDetector(
       onTap: () {
-        _controller.dismissOverlay();
+        _focusNode.unfocus();
+        // _controller.dismissOverlay();
       },
       child: Scaffold(
         appBar: AppBar(

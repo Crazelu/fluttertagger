@@ -154,11 +154,9 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     debugLabel: "FlutterTagger's child TextField key",
   );
 
-  late Offset _offset = Offset.zero;
-  late double _width = 0;
   late bool _hideOverlay = true;
-  OverlayEntry? _overlayEntry;
-  late final OverlayState _overlayState = Overlay.of(context);
+
+  final OverlayPortalController _overlayController = OverlayPortalController();
 
   /// Formats tag text to include id
   String _formatTagText(String id, String tag, String triggerCharacter) {
@@ -172,19 +170,6 @@ class _FlutterTaggerState extends State<FlutterTagger> {
     widget.onFormattedTextChanged?.call(_formattedText);
   }
 
-  /// Retrieves rendering information necessary to determine where
-  /// the overlay is positioned on the screen.
-  void _computeSize() {
-    try {
-      final renderBox =
-          _textFieldKey.currentContext!.findRenderObject() as RenderBox;
-      _width = renderBox.size.width;
-      _offset = renderBox.localToGlobal(Offset.zero);
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
-
   /// Hides overlay if [val] is true.
   /// Otherwise, this computes size, creates and inserts and OverlayEntry.
   void _shouldHideOverlay(bool val) {
@@ -194,55 +179,20 @@ class _FlutterTaggerState extends State<FlutterTagger> {
       if (_hideOverlay) {
         widget.animationController?.reverse();
         if (widget.animationController == null) {
-          _overlayEntry?.remove();
-          _overlayEntry = null;
+          _overlayController.hide();
         }
       } else {
-        _overlayEntry?.remove();
-
-        _computeSize();
-        _overlayEntry = _createOverlay();
-        _overlayState.insert(_overlayEntry!);
-
+        _overlayController.show();
         widget.animationController?.forward();
       }
-    } catch (e) {
-      debugPrint(e.toString());
-    }
+    } catch (_) {}
   }
 
   void _animationControllerListener() {
     if (widget.animationController?.status == AnimationStatus.dismissed &&
-        _overlayEntry != null) {
-      _overlayEntry?.remove();
-      _overlayEntry = null;
+        _overlayController.isShowing) {
+      _overlayController.hide();
     }
-    _overlayState.setState(() {});
-  }
-
-  /// Creates an overlay to show search result
-  OverlayEntry _createOverlay() {
-    double? top;
-    double? bottom;
-
-    if (widget.overlayPosition == OverlayPosition.top) {
-      top = _offset.dy - (widget.overlayHeight + widget.padding.vertical);
-    }
-
-    if (widget.overlayPosition == OverlayPosition.bottom) {
-      bottom = _offset.dy - widget.overlayHeight - widget.padding.vertical;
-    }
-
-    return OverlayEntry(
-      builder: (_) => Positioned(
-        left: _offset.dx,
-        width: _width,
-        height: widget.overlayHeight,
-        top: top,
-        bottom: bottom,
-        child: widget.overlay,
-      ),
-    );
   }
 
   /// Custom trie to hold all tags.
@@ -836,9 +786,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
 
       _shouldHideOverlay(false);
       widget.onSearch(query, _currentTriggerChar);
-    } catch (_, trace) {
-      debugPrint(trace.toString());
-    }
+    } catch (_) {}
   }
 
   @override
@@ -865,14 +813,47 @@ class _FlutterTaggerState extends State<FlutterTagger> {
   @override
   void dispose() {
     controller.removeListener(_tagListener);
-    _overlayEntry?.remove();
     widget.animationController?.removeListener(_animationControllerListener);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return widget.builder(context, _textFieldKey);
+    return OverlayPortal(
+      controller: _overlayController,
+      child: widget.builder(context, _textFieldKey),
+      overlayChildBuilder: (context) {
+        Offset offset = Offset.zero;
+        double width = 0;
+
+        try {
+          final renderBox =
+              _textFieldKey.currentContext!.findRenderObject() as RenderBox;
+          width = renderBox.size.width;
+          offset = renderBox.localToGlobal(Offset.zero);
+        } catch (_) {}
+
+        double? top;
+        double? bottom;
+
+        if (widget.overlayPosition == OverlayPosition.top) {
+          top = offset.dy - (widget.overlayHeight + widget.padding.vertical);
+        }
+
+        if (widget.overlayPosition == OverlayPosition.bottom) {
+          bottom = offset.dy - widget.overlayHeight - widget.padding.vertical;
+        }
+
+        return Positioned(
+          left: offset.dx,
+          width: width,
+          height: widget.overlayHeight,
+          top: top,
+          bottom: bottom,
+          child: widget.overlay,
+        );
+      },
+    );
   }
 }
 
@@ -1043,9 +1024,7 @@ class FlutterTaggerController extends TextEditingController {
         _trie.insert(taggedText);
 
         diff += matchValue.length - tag.length;
-      } catch (e) {
-        debugPrint(e.toString());
-      }
+      } catch (_) {}
     }
 
     if (newText.isNotEmpty) {

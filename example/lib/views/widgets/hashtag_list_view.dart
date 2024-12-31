@@ -62,13 +62,13 @@ class HashtagListView extends StatelessWidget {
                       ),
                       if (loading && hashtags.isEmpty) ...{
                         const Center(
-                          heightFactor: 16,
+                          heightFactor: 8,
                           child: LoadingWidget(),
                         )
                       },
                       if (!loading && hashtags.isEmpty)
                         const Center(
-                          heightFactor: 16,
+                          heightFactor: 8,
                           child: Text("Didn't find anything!"),
                         ),
                       if (hashtags.isNotEmpty)

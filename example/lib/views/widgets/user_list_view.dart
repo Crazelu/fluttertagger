@@ -54,13 +54,13 @@ class UserListView extends StatelessWidget {
                       ),
                       if (loading && users.isEmpty) ...{
                         const Center(
-                          heightFactor: 16,
+                          heightFactor: 8,
                           child: LoadingWidget(),
                         )
                       },
                       if (!loading && users.isEmpty)
                         const Center(
-                          heightFactor: 16,
+                          heightFactor: 8,
                           child: Text("No user found"),
                         ),
                       if (users.isNotEmpty)
