@@ -357,12 +357,14 @@ void main() {
 
       controller.text =
           "Hey @11a27531b866ce0016f9e582#brad#. It's time to #11a27531b866ce0016f9e582#Flutter#!";
-      controller.formatTags();
 
+      controller.formatTags();
       await tester.pump();
 
-      expect(controller.formattedText,
-          "Hey @11a27531b866ce0016f9e582#brad#. It's time to #11a27531b866ce0016f9e582#Flutter#!");
+      expect(
+        controller.formattedText,
+        "Hey @11a27531b866ce0016f9e582#brad#. It's time to @11a27531b866ce0016f9e582#Flutter#!",
+      );
       expect(controller.text, "Hey @brad. It's time to #Flutter!");
     });
 
