@@ -23,6 +23,15 @@ typedef FlutterTaggerSearchCallback = void Function(
   String triggerCharacter,
 );
 
+/// Decides whether the current search query should terminate
+/// the search context.
+///
+/// Return true to end search.
+typedef SearchTerminationPredicate = bool Function(
+  String query,
+  String triggerCharacter,
+);
+
 /// Indicates where the overlay should be positioned.
 enum OverlayPosition { top, bottom }
 
@@ -89,11 +98,16 @@ class FlutterTagger extends StatefulWidget {
     this.triggerCharactersRegex,
     this.tagTextFormatter,
     this.animationController,
+    this.shouldTerminateSearch,
   })  : assert(
           triggerCharacterAndStyles != const {},
           "triggerCharacterAndStyles cannot be empty",
         ),
         super(key: key);
+
+  /// Default regex that allows spaces in search queries.
+  /// Intended for multi-word searches (e.g. person names).
+  static final RegExp whitespaceTolerantSearchRegex = RegExp(r'^[^@#]*$');
 
   /// Widget shown in the overlay when search context is active.
   final Widget overlay;
@@ -159,6 +173,8 @@ class FlutterTagger extends StatefulWidget {
 
   /// {@macro triggerStrategy}
   final TriggerStrategy triggerStrategy;
+
+  final SearchTerminationPredicate? shouldTerminateSearch;
 
   @override
   State<FlutterTagger> createState() => _FlutterTaggerState();
@@ -812,6 +828,13 @@ class _FlutterTaggerState extends State<FlutterTagger> {
         index + 1,
         endOffset + 1,
       );
+
+      if (widget.shouldTerminateSearch?.call(query, _currentTriggerChar) ==
+          true) {
+        _shouldSearch = false;
+        _shouldHideOverlay(true);
+        return;
+      }
 
       _shouldHideOverlay(false);
       widget.onSearch(query, _currentTriggerChar);
