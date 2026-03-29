@@ -20,7 +20,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
       - name: Cache Flutter dependencies
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: /opt/hostedtoolcache/flutter
           key: ${{ runner.OS }}-flutter-install-cache-${{ env.flutter_version }}
