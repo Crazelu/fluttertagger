@@ -175,7 +175,7 @@ class CustomText extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.w400,
               fontSize: _fontSize,
-              color: textColor ?? Colors.black.withOpacity(.8),
+              color: textColor ?? Colors.black.withValues(alpha: 0.8),
             ),
           ),
         );

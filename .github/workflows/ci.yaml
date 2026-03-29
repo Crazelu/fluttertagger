@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  flutter_version: "3.22.x"
+  flutter_version: "3.32.x"
   java_version: "17.x"
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
       - name: Cache Flutter dependencies
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: /opt/hostedtoolcache/flutter
           key: ${{ runner.OS }}-flutter-install-cache-${{ env.flutter_version }}
