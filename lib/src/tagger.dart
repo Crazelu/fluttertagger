@@ -1213,7 +1213,7 @@ class FlutterTaggerController extends TextEditingController {
       if (currentText.contains(_triggerCharactersPattern)) {
         final nestedSpans = _getNestedSpans(currentText, start);
         spans.addAll(nestedSpans);
-        if (i < splitText.length - 1 && splitText[i + 1].isNotEmpty) {
+        if (i < splitText.length - 1) {
           spans.add(const TextSpan(text: " "));
         }
 
@@ -1226,7 +1226,10 @@ class FlutterTaggerController extends TextEditingController {
         if (i + 1 < splitText.length) {
           end = start + splitText[i + 1].length;
         }
-        spans.add(TextSpan(text: "$currentText "));
+        spans.add(TextSpan(text: currentText));
+        if (i < splitText.length - 1) {
+          spans.add(const TextSpan(text: " "));
+        }
       }
     }
     return TextSpan(children: spans, style: style);
