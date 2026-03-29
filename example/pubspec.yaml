@@ -12,8 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.2
-  url_launcher: ^6.1.6
+  url_launcher: ^6.2.4
   linkify: ^4.1.0
   fluttertagger:
     path: ../
