@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       title: 'FlutterTagger Demo',
       theme: ThemeData(
         textSelectionTheme: TextSelectionThemeData(
-          selectionColor: Colors.redAccent.withOpacity(.3),
+          selectionColor: Colors.redAccent.withValues(alpha: 0.3),
         ),
         primarySwatch: Colors.red,
       ),
