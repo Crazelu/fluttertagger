@@ -707,6 +707,7 @@ class _FlutterTaggerState extends State<FlutterTagger> {
         _extractAndSearch(text, position);
         _recomputeTags(oldCachedText, text, position);
         _lastCachedText = text;
+        _onFormattedTextChanged();
         return;
       }
     }
